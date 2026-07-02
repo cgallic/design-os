@@ -1,7 +1,7 @@
 from pathlib import Path
-from orchestrator.signals import Target
-from orchestrator.run import run_target, RunDeps
-from critique.runner import CritiqueResult
+from design_os.orchestrator.signals import Target
+from design_os.orchestrator.run import run_target, RunDeps
+from design_os.critique.runner import CritiqueResult
 
 TARGET = Target(id="kaicalls-homepage", url="https://kaicalls.com", watch_dir=None, vertical="b2c-fintech", brand_pack="bp")
 

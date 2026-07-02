@@ -1,8 +1,8 @@
 # tests/test_gate.py
 from pathlib import Path
-from approval_inbox import ApprovalStore
-from critique.runner import CritiqueResult
-from gate import build_approval_item, submit, finalize
+from design_os._vendor.approval_inbox import ApprovalStore
+from design_os.critique.runner import CritiqueResult
+from design_os.gate import build_approval_item, submit, finalize
 
 
 def _store(tmp_path):

@@ -1,5 +1,5 @@
 from pathlib import Path
-from critique.rubric_prompt import build_rubric_prompt
+from design_os.critique.rubric_prompt import build_rubric_prompt
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "kai-taste"
 
@@ -27,4 +27,10 @@ def test_build_rubric_prompt_raises_on_missing_file(tmp_path):
 def test_build_rubric_prompt_includes_screenshot_placeholders():
     prompt = build_rubric_prompt(FIXTURES / "SKILL.md", FIXTURES / "pillar-rubrics.md")
     assert "<<ROUTE>>" in prompt
+    assert "<<PATH>>" in prompt
+
+
+def test_build_rubric_prompt_default_paths_use_the_vendored_kai_taste_rubric():
+    prompt = build_rubric_prompt()
+    assert "Three Pillars" in prompt
     assert "<<PATH>>" in prompt

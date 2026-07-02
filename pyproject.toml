@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "design-os"
+version = "0.1.0"
+description = "Autonomous design-quality loop: kai-taste's rubric + a render/critique pipeline + approval-gated shipping."
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "playwright>=1.45",
+    "pillow>=10",
+    "requests>=2.31",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+design-os = "design_os.orchestrator.run:main"
+
+[tool.setuptools.packages.find]
+include = ["design_os*"]
+
+[tool.setuptools.package-data]
+"design_os.taste" = ["kai-taste/*.md"]
+"design_os.dashboard" = ["schema.sql"]

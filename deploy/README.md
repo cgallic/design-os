@@ -1,6 +1,6 @@
 # design-os deploy
 
-> **WARNING: do not enable this in production yet.** `orchestrator/run.py`'s live
+> **WARNING: do not enable this in production yet.** `design_os/orchestrator/run.py`'s live
 > (non-`--dry-run`) path currently raises `NotImplementedError` — only `--dry-run`
 > (listing due targets) works today. Do NOT `systemctl --user enable --now
 > design-audit.timer` expecting a working sweep until the live `RunDeps` wiring

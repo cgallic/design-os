@@ -1,5 +1,5 @@
 """Submit design-os critique results to approval-inbox, gated safe/irreversible."""
-from critique.runner import CritiqueResult
+from design_os.critique.runner import CritiqueResult
 
 
 def build_approval_item(

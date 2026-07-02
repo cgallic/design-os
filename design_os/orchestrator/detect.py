@@ -1,6 +1,6 @@
 """Decide which targets are due for a design-os pass."""
 from datetime import datetime, timedelta
-from orchestrator.signals import Target
+from design_os.orchestrator.signals import Target
 
 
 def due_targets(

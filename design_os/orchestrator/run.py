@@ -2,9 +2,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
-from critique.repair_ops import classify_finding
-from gate import build_approval_item
-from orchestrator.signals import Target
+from design_os.critique.repair_ops import classify_finding
+from design_os.gate import build_approval_item
+from design_os.orchestrator.signals import Target
 
 
 @dataclass
@@ -81,8 +81,8 @@ def run_target(target: Target, deps: RunDeps, max_iterations: int = 3) -> dict:
 def main() -> None:
     import argparse
     from datetime import datetime, timedelta
-    from orchestrator.signals import load_watchlist
-    from orchestrator.detect import due_targets
+    from design_os.orchestrator.signals import load_watchlist
+    from design_os.orchestrator.detect import due_targets
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--watchlist", required=True)

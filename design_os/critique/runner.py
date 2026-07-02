@@ -1,4 +1,4 @@
-"""Wrap ux-qa-harness's qa.py and vision.py as subprocesses; parse their output."""
+"""Wrap the vendored ux-qa-harness qa.py and vision.py as subprocesses; parse their output."""
 from dataclasses import dataclass
 from pathlib import Path
 import json
@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-UX_QA_HARNESS_DIR = Path(__file__).parent.parent.parent / "ux-qa-harness"
+UX_QA_HARNESS_DIR = Path(__file__).parent.parent / "_vendor" / "ux_qa_harness"
 
 
 @dataclass

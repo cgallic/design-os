@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-from orchestrator.signals import Target
-from orchestrator.detect import due_targets
+from design_os.orchestrator.signals import Target
+from design_os.orchestrator.detect import due_targets
 
 T1 = Target(id="a", url="https://a.example", watch_dir=None, vertical="b2b-saas", brand_pack="bp/a")
 T2 = Target(id="b", url="https://b.example", watch_dir=None, vertical="b2b-saas", brand_pack="bp/b")

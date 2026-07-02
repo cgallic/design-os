@@ -1,5 +1,5 @@
 from pathlib import Path
-from dashboard.build import init_db, record_run, render_dashboard, grade_for_score
+from design_os.dashboard.build import init_db, record_run, render_dashboard, grade_for_score
 import sqlite3
 
 

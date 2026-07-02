@@ -7,7 +7,7 @@ WATCHLIST = Path(__file__).parent / "fixtures" / "watchlist.yaml"
 
 def test_dry_run_lists_due_targets():
     result = subprocess.run(
-        [sys.executable, "-m", "orchestrator.run", "--watchlist", str(WATCHLIST), "--dry-run"],
+        [sys.executable, "-m", "design_os.orchestrator.run", "--watchlist", str(WATCHLIST), "--dry-run"],
         cwd=str(Path(__file__).parent.parent),
         capture_output=True,
         text=True,

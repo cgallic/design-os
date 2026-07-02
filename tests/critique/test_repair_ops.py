@@ -1,5 +1,5 @@
 from pathlib import Path
-from critique.repair_ops import (
+from design_os.critique.repair_ops import (
     classify_finding,
     fix_contrast,
     snap_to_grid,

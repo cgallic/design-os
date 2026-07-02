@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from critique.runner import run_qa, run_vision_critique, parse_vision_manifest, CritiqueResult
+from design_os.critique.runner import run_qa, run_vision_critique, parse_vision_manifest, CritiqueResult
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 

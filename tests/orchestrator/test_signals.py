@@ -1,5 +1,5 @@
 from pathlib import Path
-from orchestrator.signals import Target, load_watchlist
+from design_os.orchestrator.signals import Target, load_watchlist
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 

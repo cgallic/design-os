@@ -1,6 +1,10 @@
 """Compose the kai-taste rubric into a vision.py-compatible critique prompt."""
 from pathlib import Path
 
+DEFAULT_TASTE_DIR = Path(__file__).parent.parent / "taste" / "kai-taste"
+DEFAULT_SKILL_MD = DEFAULT_TASTE_DIR / "SKILL.md"
+DEFAULT_PILLAR_RUBRICS_MD = DEFAULT_TASTE_DIR / "pillar-rubrics.md"
+
 SCREENSHOT_INSTRUCTION = """
 Route: <<ROUTE>>
 
@@ -24,10 +28,13 @@ Respond with minified JSON matching this exact shape:
 """.strip()
 
 
-def build_rubric_prompt(skill_md_path: Path, pillar_rubrics_path: Path) -> str:
+def build_rubric_prompt(
+    skill_md_path: Path = DEFAULT_SKILL_MD, pillar_rubrics_path: Path = DEFAULT_PILLAR_RUBRICS_MD
+) -> str:
     """Read kai-taste's SKILL.md and pillar-rubrics.md and compose a critique prompt.
 
-    Raises FileNotFoundError if either source file is missing.
+    Defaults to the vendored copy under design_os/taste/kai-taste/. Raises FileNotFoundError
+    if either source file is missing.
     """
     skill_md_path = Path(skill_md_path)
     pillar_rubrics_path = Path(pillar_rubrics_path)
