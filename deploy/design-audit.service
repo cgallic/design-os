@@ -1,0 +1,8 @@
+[Unit]
+Description=design-os weekly watchlist sweep
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/design-os/env
+ExecStart=/usr/bin/env python3 -m orchestrator.run --watchlist %h/design-os/watchlist.yaml
+WorkingDirectory=%h/design-os

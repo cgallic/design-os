@@ -75,3 +75,32 @@ def run_target(target: Target, deps: RunDeps, max_iterations: int = 3) -> dict:
         "gate": gate,
         "item_id": item_id,
     }
+
+
+def main() -> None:
+    import argparse
+    from datetime import datetime, timedelta
+    from orchestrator.signals import load_watchlist
+    from orchestrator.detect import due_targets
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--watchlist", required=True)
+    parser.add_argument("--dry-run", action="store_true", help="Print due targets without running the pipeline.")
+    args = parser.parse_args()
+
+    targets = load_watchlist(args.watchlist)
+    due = due_targets(targets, last_run={}, now=datetime.now(), sweep_interval=timedelta(days=7))
+
+    if args.dry_run:
+        for target in due:
+            print(f"DUE: {target.id}")
+        return
+
+    raise NotImplementedError(
+        "Live run wiring (real RunDeps with run_qa/run_vision_critique/ApprovalStore) "
+        "is an infrastructure task, not a unit-testable code path — see deploy/README.md."
+    )
+
+
+if __name__ == "__main__":
+    main()

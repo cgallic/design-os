@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly design-os watchlist sweep
+
+[Timer]
+OnCalendar=Mon 13:00 UTC
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target
