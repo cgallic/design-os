@@ -22,6 +22,7 @@ def test_run_target_ships_safe_when_score_passes_on_first_pass(tmp_path):
         submit_item=lambda item: submitted.update(item=item) or "item-1",
         finalize_item=lambda item_id: submitted.setdefault("finalized", item_id),
         gate_for=lambda target: "safe",
+        run_date="2026-07-02",
         pass_threshold=25,
     )
 
@@ -49,6 +50,7 @@ def test_run_target_applies_deterministic_fixes_and_reruns(tmp_path):
         submit_item=lambda item: "item-2",
         finalize_item=lambda item_id: None,
         gate_for=lambda target: "safe",
+        run_date="2026-07-02",
         pass_threshold=25,
     )
 
@@ -72,6 +74,7 @@ def test_run_target_stops_at_max_iterations_and_still_ships(tmp_path):
         submit_item=lambda item: submitted.update(item=item) or "item-3",
         finalize_item=lambda item_id: None,
         gate_for=lambda target: "safe",
+        run_date="2026-07-02",
         pass_threshold=25,
     )
 
@@ -80,3 +83,33 @@ def test_run_target_stops_at_max_iterations_and_still_ships(tmp_path):
     assert result["iterations"] == 3
     assert result["gate"] == "safe"
     assert submitted["item"]["risk_tier"] in ("low", "medium")  # iteration-capped items are flagged, per spec section 8
+
+
+def test_run_target_flags_risk_tier_on_early_exit_while_still_failing(tmp_path):
+    # heuristic/description that classify_finding won't recognize -> classified "flag",
+    # so no deterministic fix is applied and the loop exits early on iteration 1,
+    # well before max_iterations, while still below pass_threshold.
+    low_critique = _critique(
+        10,
+        [{"priority": "P0", "fix": "rethink the tone", "pillar": "visual_cohesion",
+          "heuristic": "Tone Mismatch", "description": "copy tone feels off-brand"}],
+    )
+    submitted = {}
+
+    deps = RunDeps(
+        render=lambda target: tmp_path / "run1",
+        critique=lambda run_dir: low_critique,
+        apply_deterministic_fix=lambda finding, overrides_path: True,
+        overrides_dir=tmp_path,
+        submit_item=lambda item: submitted.update(item=item) or "item-4",
+        finalize_item=lambda item_id: None,
+        gate_for=lambda target: "safe",
+        run_date="2026-07-02",
+        pass_threshold=25,
+    )
+
+    result = run_target(TARGET, deps, max_iterations=3)
+
+    assert result["iterations"] == 1
+    assert result["iterations"] < 3
+    assert submitted["item"]["risk_tier"] == "medium"

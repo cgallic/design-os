@@ -2,10 +2,15 @@
 from critique.runner import CritiqueResult
 
 
-def build_approval_item(target_id: str, critique: CritiqueResult, gate: str, dry_run_preview: str) -> dict:
+def build_approval_item(
+    target_id: str, critique: CritiqueResult, gate: str, dry_run_preview: str, run_date: str
+) -> dict:
     """Build an ApprovalStore.add()-ready item dict from a critique result.
 
     gate: "safe" (draft-only output, auto-approved) or "irreversible" (touches a live surface, held for a human).
+    run_date: caller-supplied date string (e.g. datetime.now().date().isoformat()) folded into
+    dedup_key so repeated scheduled runs against the same target_id don't collide with a prior
+    run's approval-inbox item (see ApprovalStore.add()'s dedup-idempotent behavior).
     """
     owner = "agent-auto" if gate == "safe" else "approve"
     risk_tier = "low" if gate == "safe" else "high"
@@ -25,7 +30,7 @@ def build_approval_item(target_id: str, critique: CritiqueResult, gate: str, dry
         "risk_tier": risk_tier,
         "evidence": evidence,
         "action": {"kind": "design.publish", "params": {"target_id": target_id}, "dry_run_preview": dry_run_preview},
-        "dedup_key": f"design-os:{target_id}",
+        "dedup_key": f"design-os:{target_id}:{run_date}",
     }
 
 

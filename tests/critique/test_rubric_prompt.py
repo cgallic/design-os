@@ -22,3 +22,9 @@ def test_build_rubric_prompt_raises_on_missing_file(tmp_path):
     import pytest
     with pytest.raises(FileNotFoundError):
         build_rubric_prompt(tmp_path / "missing.md", FIXTURES / "pillar-rubrics.md")
+
+
+def test_build_rubric_prompt_includes_screenshot_placeholders():
+    prompt = build_rubric_prompt(FIXTURES / "SKILL.md", FIXTURES / "pillar-rubrics.md")
+    assert "<<ROUTE>>" in prompt
+    assert "<<PATH>>" in prompt

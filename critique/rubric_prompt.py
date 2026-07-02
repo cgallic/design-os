@@ -1,6 +1,12 @@
 """Compose the kai-taste rubric into a vision.py-compatible critique prompt."""
 from pathlib import Path
 
+SCREENSHOT_INSTRUCTION = """
+Route: <<ROUTE>>
+
+First, use the Read tool to open the image at: <<PATH>>
+""".strip()
+
 JSON_CONTRACT = """
 Respond with minified JSON matching this exact shape:
 {
@@ -29,5 +35,5 @@ def build_rubric_prompt(skill_md_path: Path, pillar_rubrics_path: Path) -> str:
     pillar_text = pillar_rubrics_path.read_text(encoding="utf-8")
     return (
         "You are auditing a rendered screenshot against the kai-taste design framework.\n\n"
-        f"{skill_text}\n\n{pillar_text}\n\n{JSON_CONTRACT}"
+        f"{SCREENSHOT_INSTRUCTION}\n\n{skill_text}\n\n{pillar_text}\n\n{JSON_CONTRACT}"
     )
