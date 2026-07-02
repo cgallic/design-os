@@ -5,3 +5,4 @@ __pycache__/
 runs/
 dashboard/design-os.db
 .env
+.superpowers/

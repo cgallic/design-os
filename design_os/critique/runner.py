@@ -69,9 +69,14 @@ def run_qa(env_file: Path, run_root: Path, base_url: str | None = None, spec: Pa
     matches = sorted(runs_dir.glob("*-qa"))
     if not matches:
         raise RuntimeError(
-            f"qa.py exited successfully but produced no *-qa run directory under {runs_dir}"
+            f"qa.py produced no *-qa run directory under {runs_dir} (crashed before writing output?)"
         )
-    return matches[-1]
+    run_dir = matches[-1]
+    if not (run_dir / "qa-manifest.json").exists():
+        # A *-qa dir can exist with no manifest if qa.py crashed mid-run, or if this lookup
+        # landed on a stale dir from an earlier invocation reusing the same run_root.
+        raise RuntimeError(f"qa.py produced no qa-manifest.json in {run_dir} (crashed mid-run?)")
+    return run_dir
 
 
 def run_vision_critique(run_dir: Path, prompt_file: Path) -> Path:

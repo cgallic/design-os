@@ -107,8 +107,15 @@ def main() -> None:
 
     state_dir = Path(args.state_dir)
     state_dir.mkdir(parents=True, exist_ok=True)
-    run_date = datetime.now().date().isoformat()
-    work_root = state_dir / "runs" / run_date
+    now = datetime.now()
+    # run_date stays date-granularity: it feeds gate.py's dedup_key, so repeated same-day
+    # scheduled runs for the same target collapse onto one approval-inbox item by design.
+    run_date = now.date().isoformat()
+    # work_root is invocation-unique (not just per-day): reusing a directory across separate
+    # invocations risks a later crash landing on a stale successful run's *-qa directory via
+    # run_qa's sorted(...)[-1] lookup, silently masking the crash as a stale "success".
+    invocation_id = now.strftime("%Y%m%dT%H%M%S%f")
+    work_root = state_dir / "runs" / invocation_id
     work_root.mkdir(parents=True, exist_ok=True)
 
     store = ApprovalStore(db_path=state_dir / "inbox.db", jsonl_path=state_dir / "inbox.jsonl")

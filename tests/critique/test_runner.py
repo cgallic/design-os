@@ -30,8 +30,11 @@ def test_run_qa_invokes_subprocess_with_expected_args(monkeypatch, tmp_path):
     env_file.write_text("UXQA_BASE_URL=https://example.com\n", encoding="utf-8")
     run_root = tmp_path / "runtime"
     # fake subprocess.run doesn't create real files, so pre-create a run dir
-    # for run_qa's sorted(runs_dir.glob("*-qa"))[-1] lookup to find.
-    (run_root / "runs" / "2026-run-qa").mkdir(parents=True)
+    # (with a manifest, so run_qa's success check passes) for run_qa's
+    # sorted(runs_dir.glob("*-qa"))[-1] lookup to find.
+    run_dir = run_root / "runs" / "2026-run-qa"
+    run_dir.mkdir(parents=True)
+    (run_dir / "qa-manifest.json").write_text("{}", encoding="utf-8")
 
     run_qa(env_file, run_root)
 
@@ -53,7 +56,9 @@ def test_run_qa_passes_base_url_override_when_given(monkeypatch, tmp_path):
     env_file = tmp_path / "site.env"
     env_file.write_text("", encoding="utf-8")
     run_root = tmp_path / "runtime"
-    (run_root / "runs" / "2026-run-qa").mkdir(parents=True)
+    run_dir = run_root / "runs" / "2026-run-qa"
+    run_dir.mkdir(parents=True)
+    (run_dir / "qa-manifest.json").write_text("{}", encoding="utf-8")
 
     run_qa(env_file, run_root, base_url="https://kaicalls.com")
 
@@ -73,7 +78,9 @@ def test_run_qa_passes_spec_override_when_given(monkeypatch, tmp_path):
     env_file = tmp_path / "site.env"
     env_file.write_text("", encoding="utf-8")
     run_root = tmp_path / "runtime"
-    (run_root / "runs" / "2026-run-qa").mkdir(parents=True)
+    run_dir = run_root / "runs" / "2026-run-qa"
+    run_dir.mkdir(parents=True)
+    (run_dir / "qa-manifest.json").write_text("{}", encoding="utf-8")
     spec_path = tmp_path / "audit-spec.yaml"
 
     run_qa(env_file, run_root, spec=spec_path)
@@ -94,7 +101,9 @@ def test_run_qa_omits_base_url_flag_when_not_given(monkeypatch, tmp_path):
     env_file = tmp_path / "site.env"
     env_file.write_text("UXQA_BASE_URL=https://example.com\n", encoding="utf-8")
     run_root = tmp_path / "runtime"
-    (run_root / "runs" / "2026-run-qa").mkdir(parents=True)
+    run_dir = run_root / "runs" / "2026-run-qa"
+    run_dir.mkdir(parents=True)
+    (run_dir / "qa-manifest.json").write_text("{}", encoding="utf-8")
 
     run_qa(env_file, run_root)
 
@@ -120,6 +129,7 @@ def test_run_qa_does_not_raise_when_qa_py_exits_1_but_produced_a_run_dir(monkeyp
     run_root = tmp_path / "runtime"
     run_dir = run_root / "runs" / "20260702T000000Z-qa"
     run_dir.mkdir(parents=True)
+    (run_dir / "qa-manifest.json").write_text("{}", encoding="utf-8")
 
     result = run_qa(env_file, run_root, base_url="https://example.com")
 
@@ -141,6 +151,29 @@ def test_run_qa_raises_runtime_error_when_no_run_dir_produced(monkeypatch, tmp_p
         run_qa(env_file, run_root)
 
     assert str(run_root / "runs") in str(exc_info.value)
+
+
+def test_run_qa_raises_runtime_error_when_run_dir_exists_but_has_no_manifest(monkeypatch, tmp_path):
+    # A *-qa directory can exist without a manifest in two real scenarios: (1) qa.py crashed
+    # after creating the run dir but before writing qa-manifest.json, or (2) a repeat same-day
+    # invocation's sorted(...)[-1] lookup lands on a STALE dir left over from an earlier,
+    # separate run because run_root is reused across invocations within a day. Either way, a
+    # directory with no manifest must never be reported back as a successful run.
+    def fake_run(cmd, **kwargs):
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    env_file = tmp_path / "site.env"
+    env_file.write_text("UXQA_BASE_URL=https://example.com\n", encoding="utf-8")
+    run_root = tmp_path / "runtime"
+    run_dir = run_root / "runs" / "20260702T000000Z-qa"
+    run_dir.mkdir(parents=True)
+    # deliberately no qa-manifest.json inside run_dir
+
+    with pytest.raises(RuntimeError) as exc_info:
+        run_qa(env_file, run_root)
+
+    assert str(run_dir) in str(exc_info.value)
 
 
 def test_run_vision_critique_invokes_subprocess_with_prompt_file(monkeypatch, tmp_path):

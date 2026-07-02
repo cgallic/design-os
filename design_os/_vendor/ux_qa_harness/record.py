@@ -136,7 +136,7 @@ def _runs_root() -> Path:
 
 
 def _new_run_dir(mode: str) -> Path:
-    stamp = dt.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
     run_dir = _runs_root() / f"{stamp}-{mode}"
     run_dir.mkdir(parents=True, exist_ok=True)
     for sub in ("screenshots", "clips", "logs"):
@@ -446,7 +446,7 @@ def _process_entry_record(
             "panel_bbox": panel_bbox,
             "screenshot": str(shot.relative_to(run_dir)),
             "clip": str(clip_dst.relative_to(run_dir)) if clip_dst.exists() else None,
-            "captured_at": dt.datetime.utcnow().isoformat() + "Z",
+            "captured_at": dt.datetime.now(dt.UTC).replace(tzinfo=None).isoformat() + "Z",
         }
         (run_dir / "clips" / f"{entry.id}.json").write_text(json.dumps(meta, indent=2))
         return {
