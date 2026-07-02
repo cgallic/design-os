@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "route": "/",
+      "issues": [
+        {"heuristic": "Affordance Collapse", "description": "CTA button looks like plain text", "evidence": "screenshot-1.png", "severity": 3, "confidence": 0.9, "fix": "Add button styling from brand tokens"},
+        {"heuristic": "Visual Cohesion", "description": "Contrast 3.1:1 on body text", "evidence": "screenshot-1.png", "severity": 2, "confidence": 0.85, "fix": "Darken text color"}
+      ],
+      "working_well": ["Clear single hero message"],
+      "scorecard": {
+        "pillars": {"deterministic_stochastic_balance": 8, "interaction_density": 6, "visual_cohesion": 5},
+        "composite": 19,
+        "failure_modes_present": ["Affordance Collapse"],
+        "prioritized_fixes": [
+          {"priority": "P0", "fix": "Add button styling from brand tokens", "pillar": "visual_cohesion"},
+          {"priority": "P1", "fix": "Darken text color", "pillar": "visual_cohesion"}
+        ]
+      }
+    }
+  ]
+}
