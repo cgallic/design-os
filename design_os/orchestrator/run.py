@@ -81,12 +81,20 @@ def run_target(target: Target, deps: RunDeps, max_iterations: int = 3) -> dict:
 def main() -> None:
     import argparse
     from datetime import datetime, timedelta
-    from design_os.orchestrator.signals import load_watchlist
+    from design_os._vendor.approval_inbox import ApprovalStore
+    from design_os.dashboard.build import init_db
     from design_os.orchestrator.detect import due_targets
+    from design_os.orchestrator.live import build_live_deps, run_watchlist_live
+    from design_os.orchestrator.signals import load_watchlist
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--watchlist", required=True)
     parser.add_argument("--dry-run", action="store_true", help="Print due targets without running the pipeline.")
+    parser.add_argument(
+        "--state-dir",
+        default=str(Path.home() / ".design-os"),
+        help="Where run scratch files, the approval-inbox store, and the dashboard db live.",
+    )
     args = parser.parse_args()
 
     targets = load_watchlist(args.watchlist)
@@ -97,10 +105,19 @@ def main() -> None:
             print(f"DUE: {target.id}")
         return
 
-    raise NotImplementedError(
-        "Live run wiring (real RunDeps with run_qa/run_vision_critique/ApprovalStore) "
-        "is an infrastructure task, not a unit-testable code path — see deploy/README.md."
-    )
+    state_dir = Path(args.state_dir)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    run_date = datetime.now().date().isoformat()
+    work_root = state_dir / "runs" / run_date
+    work_root.mkdir(parents=True, exist_ok=True)
+
+    store = ApprovalStore(db_path=state_dir / "inbox.db", jsonl_path=state_dir / "inbox.jsonl")
+    dashboard_db_path = state_dir / "dashboard.db"
+    if not dashboard_db_path.exists():
+        init_db(dashboard_db_path)
+
+    deps = build_live_deps(work_root=work_root, store=store, run_date=run_date)
+    run_watchlist_live(due, deps=deps, dashboard_db_path=dashboard_db_path)
 
 
 if __name__ == "__main__":

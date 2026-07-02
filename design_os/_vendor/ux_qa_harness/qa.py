@@ -380,7 +380,7 @@ def main() -> int:
 
     run_dir = record._new_run_dir("qa")
     meta = {
-        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+        "generated_at": dt.datetime.now(dt.UTC).replace(tzinfo=None).isoformat() + "Z",
         "base_url": base_url,
         "target_label": target_label,
         "report_name": cfg.get("UXQA_REPORT_NAME", "UX-QA"),

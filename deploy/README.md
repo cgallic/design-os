@@ -1,10 +1,11 @@
 # design-os deploy
 
-> **WARNING: do not enable this in production yet.** `design_os/orchestrator/run.py`'s live
-> (non-`--dry-run`) path currently raises `NotImplementedError` — only `--dry-run`
-> (listing due targets) works today. Do NOT `systemctl --user enable --now
-> design-audit.timer` expecting a working sweep until the live `RunDeps` wiring
-> (real `run_qa`/`run_vision_critique`/`ApprovalStore`) is implemented.
+> **Scope note:** the live path audits real URL targets end-to-end (real Playwright
+> render, real Claude critique against the kai-taste rubric, real approval-inbox item,
+> real dashboard row) — verified against a real target. It does not yet auto-repair
+> findings (design-os can only observe a live URL, not rewrite it) and does not yet
+> support `watch_dir` targets (factory-output re-render integration is undesigned) —
+> those are skipped with a `SKIP:` log line, not silently dropped.
 
 Source templates only — install on the target box via:
 

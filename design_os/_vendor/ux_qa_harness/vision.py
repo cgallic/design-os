@@ -160,7 +160,7 @@ def main() -> int:
     out_dir = run_dir
     all_issues = [(r["route"], i) for r in results for i in r["issues"]]
     all_issues.sort(key=lambda ri: ri[1].get("severity", 0), reverse=True)
-    lines = [f"# Vision usability critique - {dt.datetime.utcnow().isoformat()}Z",
+    lines = [f"# Vision usability critique - {dt.datetime.now(dt.UTC).replace(tzinfo=None).isoformat()}Z",
              f"\nFrom `{run_dir}` - {len(shots)} screens - {len(all_issues)} grounded issues "
              f"(confidence >= {args.min_confidence}, severity >= {args.min_severity})\n"]
     SEV = {4: "CRITICAL", 3: "SERIOUS", 2: "MODERATE", 1: "MINOR"}
@@ -171,7 +171,7 @@ def main() -> int:
                      f"(conf {i.get('confidence','?')})")
     (out_dir / "vision-report.md").write_text("\n".join(lines))
     (out_dir / "vision-manifest.json").write_text(json.dumps(
-        {"generated_at": dt.datetime.utcnow().isoformat() + "Z", "run_dir": str(run_dir),
+        {"generated_at": dt.datetime.now(dt.UTC).replace(tzinfo=None).isoformat() + "Z", "run_dir": str(run_dir),
          "min_confidence": args.min_confidence, "results": results}, indent=2))
 
     serious = sum(1 for _, i in all_issues if i.get("severity", 0) >= 3)

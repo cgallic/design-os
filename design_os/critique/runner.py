@@ -41,10 +41,14 @@ def parse_vision_manifest(manifest_path: Path) -> CritiqueResult:
     )
 
 
-def run_qa(env_file: Path, run_root: Path) -> Path:
+def run_qa(env_file: Path, run_root: Path, base_url: str | None = None, spec: Path | None = None) -> Path:
     """Run ux-qa-harness's qa.py against env_file; return the created run directory.
 
     run_root is passed as UXQA_RUNTIME_ROOT so output lands under our control.
+    base_url, if given, overrides UXQA_BASE_URL via qa.py's own --base-url flag,
+    so a target's URL can be audited without needing a real env file to exist.
+    spec, if given, overrides qa.py's default --spec (docs-spec.yaml, which isn't
+    vendored) with a caller-supplied route list.
     """
     cmd = [
         sys.executable,
@@ -52,8 +56,15 @@ def run_qa(env_file: Path, run_root: Path) -> Path:
         "--env-file",
         str(env_file),
     ]
+    if base_url:
+        cmd += ["--base-url", base_url]
+    if spec:
+        cmd += ["--spec", str(spec)]
     env = {**os.environ, "UXQA_RUNTIME_ROOT": str(run_root)}
-    subprocess.run(cmd, cwd=str(UX_QA_HARNESS_DIR), env=env, check=True)
+    # No check=True: qa.py exits 1 by design when it finds a critical-severity route (its own
+    # CI-style signal, not a crash) while still writing a real manifest. A genuine subprocess
+    # failure (crash, no manifest at all) is caught below by the empty-glob check instead.
+    subprocess.run(cmd, cwd=str(UX_QA_HARNESS_DIR), env=env)
     runs_dir = Path(run_root) / "runs"
     matches = sorted(runs_dir.glob("*-qa"))
     if not matches:
