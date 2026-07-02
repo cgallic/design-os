@@ -1,6 +1,9 @@
 import json
 import subprocess
 from pathlib import Path
+
+import pytest
+
 from critique.runner import run_qa, run_vision_critique, parse_vision_manifest, CritiqueResult
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
@@ -37,6 +40,23 @@ def test_run_qa_invokes_subprocess_with_expected_args(monkeypatch, tmp_path):
     assert "qa.py" in cmd[1] or "qa.py" in " ".join(cmd)
     assert "--env-file" in cmd
     assert str(env_file) in cmd
+
+
+def test_run_qa_raises_runtime_error_when_no_run_dir_produced(monkeypatch, tmp_path):
+    def fake_run(cmd, **kwargs):
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    env_file = tmp_path / "site.env"
+    env_file.write_text("UXQA_BASE_URL=https://example.com\n", encoding="utf-8")
+    run_root = tmp_path / "runtime"
+    # deliberately do NOT create any *-qa run dir under run_root/runs, to
+    # simulate qa.py exiting 0 but producing a degenerate/partial run.
+
+    with pytest.raises(RuntimeError) as exc_info:
+        run_qa(env_file, run_root)
+
+    assert str(run_root / "runs") in str(exc_info.value)
 
 
 def test_run_vision_critique_invokes_subprocess_with_prompt_file(monkeypatch, tmp_path):

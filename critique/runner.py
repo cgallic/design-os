@@ -55,8 +55,12 @@ def run_qa(env_file: Path, run_root: Path) -> Path:
     env = {**os.environ, "UXQA_RUNTIME_ROOT": str(run_root)}
     subprocess.run(cmd, cwd=str(UX_QA_HARNESS_DIR), env=env, check=True)
     runs_dir = Path(run_root) / "runs"
-    latest = sorted(runs_dir.glob("*-qa"))[-1]
-    return latest
+    matches = sorted(runs_dir.glob("*-qa"))
+    if not matches:
+        raise RuntimeError(
+            f"qa.py exited successfully but produced no *-qa run directory under {runs_dir}"
+        )
+    return matches[-1]
 
 
 def run_vision_critique(run_dir: Path, prompt_file: Path) -> Path:
