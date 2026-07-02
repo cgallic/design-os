@@ -1,0 +1,5 @@
+-e ../ux-qa-harness
+-e ../visual-factory-kit
+-e ../approval-inbox
+-e ../cmo-daily-dashboard
+pyyaml>=6.0

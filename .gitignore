@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+runs/
+dashboard/design-os.db
+.env
