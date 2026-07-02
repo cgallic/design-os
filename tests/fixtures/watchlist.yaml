@@ -1,0 +1,11 @@
+targets:
+  - id: kaicalls-homepage
+    url: https://kaicalls.com
+    vertical: b2c-fintech
+    brand_pack: visual-factory-kit/brand-packs/kaicalls
+  - id: factory-output
+    watch_dir: /path/to/cmo-os/factory/output
+    vertical: b2b-saas
+cadence:
+  sweep: weekly
+  watch_dir_poll: 15m
