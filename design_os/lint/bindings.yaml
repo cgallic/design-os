@@ -1,0 +1,68 @@
+# Bindings: catalog rule IDs -> deterministic check implementations (lint/checks.py).
+#
+# A binding is the harness's claim that a rule is *actually computed*, not narrated.
+# Unbound deterministic rules surface as status=unimplemented in every lint run —
+# an honest gap report, growing this file is how the gap closes.
+#
+# Params operationalize the rule's threshold for what a style snapshot can measure;
+# where the check approximates the rule (noted per binding), the approximation is
+# always the *lenient* direction so a lint failure is never a false alarm.
+bindings:
+  # WCAG text contrast: 4.5:1 normal / 3:1 large, worst case per element.
+  - rule_id: A11Y-001
+    check: contrast_min
+    params: {ratio_normal: 4.5, ratio_large: 3.0}
+
+  # Hit targets. Snapshot is a 1440px desktop render, so the pointer floor
+  # (24px, WCAG 2.5.8) applies — the 44pt touch floor needs a mobile-viewport run.
+  - rule_id: A11Y-003
+    check: tap_target_min
+    params: {min_px: 24.0}
+
+  # Content images carry alt text (decorative marked as such).
+  - rule_id: A11Y-014
+    check: alt_text
+    params: {}
+
+  # Minimum rendered text size. Rule floor: content >= ~14.7px, supporting >= 12px.
+  # The snapshot can't classify content vs supporting text, so the lenient shared
+  # floor (12px) is enforced; the content-text band is the vision panel's problem.
+  - rule_id: TYPE-003
+    check: min_font_size
+    params: {min_px: 12.0}
+
+  # Body line-height in [1.20, 1.50] (the catalog's adopted web band).
+  - rule_id: TYPE-004
+    check: line_height_range
+    params: {min_ratio: 1.2, max_ratio: 1.5}
+
+  # Body measure hard band 45-90 chars/line.
+  - rule_id: TYPE-005
+    check: line_length
+    params: {min_chars: 45, max_chars: 90}
+
+  # Typeface budget: <= 2 families per artifact, code monospace exempt.
+  - rule_id: TYPE-006
+    check: font_family_max
+    params: {max_families: 2, ignore_monospace: true}
+
+  # One declared scale, <= 7 steps used per artifact. The snapshot can't see the
+  # declared scale, so it enforces the step-count ceiling; scale membership is
+  # checked against tokens by the repair layer.
+  - rule_id: TYPE-008
+    check: type_scale_size_count
+    params: {max_sizes: 7, tolerance_px: 0.5}
+
+  # Spacing on the 4px base scale. Rule says 100%; computed styles include
+  # percent-derived values the page author never wrote, so 90% conformance is
+  # the measurement-tolerant operationalization.
+  - rule_id: SPACE-001
+    check: spacing_grid
+    params: {grid_px: 4, min_conformance: 0.9}
+
+  # Duration ceilings: no user-blocking transition beyond 400ms (standard UI).
+  # Snapshot sees CSS transition durations only; min_ms 0 because MOTION-002
+  # is a ceiling rule (the 100ms feedback floor is MOTION-001, runtime-only).
+  - rule_id: MOTION-002
+    check: animation_duration
+    params: {min_ms: 0.0, max_ms: 400.0}

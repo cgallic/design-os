@@ -1,6 +1,10 @@
 version: 1
 generated_from: canon files in design_os/canon/
 # Canonical rule catalog synthesized from 12 schools (230 candidate rules -> 150 canonical).
+# Completeness-audit pass applied 2026-07-03: check_type relabels (vision/behavioral),
+# unadjudicable blocks downgraded to flag, near-dupes merged (CRAFT-006, INFO-005,
+# PROC-008, SPACE-005 retired — IDs never reused), applies_to scoping and tension records
+# added; 146 rules remain.
 # Ordering: within each ID prefix, blocks first, then flags, then advise.
 # Source slugs map 1:1 to design_os/canon/*.md basenames.
 rules:
@@ -236,7 +240,7 @@ rules:
       green, amber, blue) appear only with their status meaning (a red element
       that is not an error or destructive affordance fails).
     category: color
-    check_type: deterministic
+    check_type: vision
     threshold: "1:1 color-to-meaning mapping product-wide, 0 exceptions; status hues only with status semantics"
     severity: block
     rationale: >-
@@ -283,7 +287,7 @@ rules:
       (test: name the signal; unnamed means remove or neutralize), with at most
       one accent hue per screen and a small named chromatic budget per product.
     category: color
-    check_type: deterministic
+    check_type: vision
     threshold: "0 decorative uses of accent color (low-chroma neutrals exempt); <= 1 accent hue per screen; <= 3 chromatic hues per artifact, 100% with a stated identifying function"
     severity: block
     rationale: >-
@@ -291,7 +295,11 @@ rules:
       scarcity; Vignelli used color as signifier or identifier, never
       decoration; Geist keeps neutrals carrying the UI with one accent family.
     sources: [rams-functionalism, swiss-grid, saas-quality-culture]
-    tension: ""
+    tension: >-
+      Data-viz carve-out: chart data marks are exempt from the <= 3 chromatic
+      hues / 1 accent-per-screen budget — COLOR-008 governs them, allowing up
+      to 7 categorical hues per chart. This screen budget applies to the
+      surrounding UI, not to the color encoding inside data graphics.
 
   - id: COLOR-005
     statement: >-
@@ -300,13 +308,21 @@ rules:
       color exists.
     category: color
     check_type: deterministic
-    threshold: ">= 90% of pixel area at chroma < 10 (OKLCH C < 0.03), excluding user content/imagery"
+    threshold: ">= 90% of pixel area at OKLCH C < 0.03, excluding user content/imagery"
     severity: flag
     rationale: >-
       Braun housings were off-white/grey/anthracite so the product stays
-      unobtrusive and leaves room for the user's content.
+      unobtrusive and leaves room for the user's content. 2026-07-03 audit:
+      OKLCH C < 0.03 adopted as the single canonical threshold; the earlier
+      mixed-scale "chroma < 10" equivalence was pseudo-precision and was
+      dropped.
     sources: [rams-functionalism]
-    tension: ""
+    tension: >-
+      Ambiguous for chart-dense dashboards: if data marks count as user
+      content they are excluded and the screen passes trivially, but if they
+      count as frame they can push a legitimate dashboard past the 10%
+      chromatic budget. The user-content carve-out's boundary is undefined
+      for data graphics.
 
   - id: COLOR-006
     statement: >-
@@ -354,6 +370,7 @@ rules:
       palettes to a small set of soft distinguishable hues.
     sources: [information-design]
     tension: ""
+    applies_to: [chart]
 
   - id: COLOR-009
     statement: >-
@@ -369,6 +386,7 @@ rules:
       the order (Few, rule 6).
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: COLOR-010
     statement: >-
@@ -385,6 +403,7 @@ rules:
       scarce "look here" signal, never decoration.
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: COLOR-011
     statement: >-
@@ -422,16 +441,21 @@ rules:
     statement: >-
       Every text block, image, and component edge aligns to the declared grid:
       x-positions on column boundaries, heights and y-positions in whole
-      baseline increments; misalignments within a group are defects.
+      baseline increments; misalignments within a group are defects. Vertical
+      rhythm derives from one basic leading: the vertical space consumed by
+      every departure from body text (headings, figures, block quotes) is a
+      whole-number multiple of the base line-height.
     category: spacing-layout
     check_type: deterministic
-    threshold: "100% of element edges within 1px of a declared grid line; vertical positions = 0 mod baseline unit; 0px edge-alignment tolerance within a group"
+    threshold: "100% of element edges within 1px of a declared grid line; vertical positions = 0 mod baseline unit; 0px edge-alignment tolerance within a group; (element height + margins) mod base-leading = 0, +/-1 px, for >= 95% of block-level departures"
     severity: block
     rationale: >-
       Muller-Brockmann's grid fields correspond in depth to whole lines of
       text and in width to the columns; IBM's 2x grid snaps all geometry to
-      the mini unit.
-    sources: [swiss-grid, system-governance, rams-functionalism]
+      the mini unit. Bringhurst requires adding and deleting vertical space in
+      measured intervals so the page keeps one beat (folded in from retired
+      near-duplicate SPACE-005).
+    sources: [swiss-grid, system-governance, rams-functionalism, typography-canon]
     tension: ""
 
   - id: SPACE-003
@@ -447,6 +471,7 @@ rules:
       scrolling destroys.
     sources: [information-design]
     tension: ""
+    applies_to: [dashboard]
 
   - id: SPACE-004
     statement: >-
@@ -463,20 +488,8 @@ rules:
     sources: [swiss-grid]
     tension: ""
 
-  - id: SPACE-005
-    statement: >-
-      Vertical rhythm derives from one basic leading: the vertical space
-      consumed by every departure from body text (headings, figures, block
-      quotes) is a whole-number multiple of the base line-height.
-    category: spacing-layout
-    check_type: deterministic
-    threshold: "(element height + margins) mod base-leading = 0, +/-1 px, for >= 95% of block-level departures"
-    severity: flag
-    rationale: >-
-      Bringhurst requires adding and deleting vertical space in measured
-      intervals so the page keeps one beat.
-    sources: [typography-canon]
-    tension: ""
+  # SPACE-005 retired 2026-07-03: merged into SPACE-002 (baseline/vertical rhythm).
+  # ID permanently retired — never reuse.
 
   - id: SPACE-006
     statement: >-
@@ -547,13 +560,18 @@ rules:
       scales, aspect ratio, and encoding.
     category: spacing-layout
     check_type: deterministic
-    threshold: "overlapping line series <= 5 per panel; multiples share identical axis min/max/ticks (shared-scale violation escalates to block)"
+    threshold: "overlapping line series <= 5 per panel; multiples share identical axis min/max/ticks"
     severity: flag
     rationale: >-
       Tufte: small multiples make high-dimensional comparison legible, but
       only if every frame is directly comparable.
     sources: [information-design]
-    tension: ""
+    tension: >-
+      The source guidance escalates a shared-scale violation (small multiples
+      on differing axes) to block, but the schema cannot represent
+      conditional severity; the rule carries flag and the escalation intent
+      is recorded here.
+    applies_to: [chart, dashboard]
 
   - id: SPACE-011
     statement: >-
@@ -594,7 +612,7 @@ rules:
       text is distinguished with 2-3 gray steps at similar size rather than by
       shrinking.
     category: hierarchy
-    check_type: deterministic
+    check_type: vision
     threshold: "each adjacent text-role pair differs in color or weight, not only size; <= 3 hierarchy text colors (dark/gray/lighter-gray)"
     severity: flag
     rationale: >-
@@ -720,10 +738,13 @@ rules:
     category: components-affordance
     check_type: vision
     threshold: "vision model or 5-user test identifies purpose and primary action >= 80% correct, unaided, within 10 seconds"
-    severity: block
+    severity: flag
     rationale: >-
       Rams: "design riddles are impudent"; Vignelli's pragmatics demands any
-      artifact stand by itself in all its clarity.
+      artifact stand by itself in all its clarity. Downgraded from block in
+      the 2026-07-03 audit: no evaluation protocol for the 5-user/10-second
+      test is defined, so the judgment is not adjudicable; this rule blocks
+      again once a protocol exists.
     sources: [rams-functionalism, swiss-grid]
     tension: ""
 
@@ -731,15 +752,22 @@ rules:
     statement: >-
       Every reachable UI state is designed: each data-bearing view has explicit
       loading, empty, error, and permission-denied variants (plus a
-      max-accessibility-text pass), not just the success case with ideal data.
+      max-accessibility-text pass), not just the success case with ideal data;
+      the empty state states what belongs there and shows an emphasized
+      call-to-action for creating the first item (optionally with an
+      illustration or templates) — never a bare header row or "No results" —
+      and controls that do nothing without content (filters, sort, tabs) are
+      hidden in it.
     category: components-affordance
     check_type: deterministic
-    threshold: "4 non-success states (loading, empty, error, no-permission) present per data-bearing view; 0 default/unstyled fallbacks"
+    threshold: "4 non-success states (loading, empty, error, no-permission) present per data-bearing view; 0 default/unstyled fallbacks; empty state has 1 emphasized CTA and 0 visible non-functional controls"
     severity: block
     rationale: >-
       Vercel names "design every reachable state" a core operating principle;
-      Ive's drawer-back craft extends to states people rarely see.
-    sources: [saas-quality-culture, apple-hig]
+      Ive's drawer-back craft extends to states people rarely see. The empty
+      state is a new user's first impression and should prompt creation, not
+      present dead chrome (folded in from retired near-duplicate INFO-005).
+    sources: [saas-quality-culture, apple-hig, refactoring-ui, interface-craft]
     tension: ""
 
   - id: COMP-004
@@ -856,14 +884,21 @@ rules:
       component exists for a control or flow, use it; re-implementing an
       existing primitive outside the system fails review, and any deviation
       from an established archetype requires written functional justification
-      tied to a real capability difference.
+      tied to a real capability difference. A new component or pattern is
+      admitted to the system only with evidence it is useful (at least 2
+      independent teams/services need it) and unique (cannot be composed from
+      existing components); replication of an existing component is rejected
+      absent superiority evidence.
     category: components-affordance
     check_type: process
-    threshold: "0 undocumented deviations from established archetypes; 0 duplicated primitives re-implemented outside the system"
+    threshold: "0 undocumented deviations from established archetypes; 0 duplicated primitives re-implemented outside the system; new system components carry >= 2 independent documented use cases and are not composable from existing components"
     severity: flag
     rationale: >-
       Morrison/Fukasawa: "special is generally less useful than normal";
-      GOV.UK's consistency criterion requires reusing existing components.
+      GOV.UK's consistency criterion requires reusing existing components,
+      and its working group tests every proposal against published "useful
+      and unique" criteria before it enters the backlog (folded in from
+      retired near-duplicate PROC-008).
     sources: [rams-functionalism, system-governance, apple-hig]
     tension: ""
 
@@ -914,6 +949,7 @@ rules:
       gauges waste most of their pixels on chrome.
     sources: [information-design]
     tension: ""
+    applies_to: [dashboard]
 
   - id: COMP-015
     statement: >-
@@ -943,20 +979,26 @@ rules:
       cases prevents greatness in any particular one.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   # ---------------------------------------------------------------- motion
   - id: MOTION-001
     statement: >-
       Interaction feedback is immediate: visible response begins within 100ms
       of input, and feedback animations for presses, toggles, hovers, and
-      control state changes complete within 70-200ms.
+      control state changes complete within 70-200ms; mutation round-trips
+      target under 500ms and lists over 50 items are virtualized so
+      acknowledgment stays instant.
     category: motion
     check_type: deterministic
-    threshold: "first feedback frame <= 100ms after event; control-state animation duration in [70, 200]ms (token range 70-150ms preferred)"
+    threshold: "first feedback frame <= 100ms after event; control-state animation duration in [70, 200]ms (token range 70-150ms preferred); mutation round-trip < 500ms; lists > 50 items virtualized"
     severity: block
     rationale: >-
       Carbon's fast tokens (70/110ms) and Freiberg's 200ms cap both encode the
-      same law: slower feedback reads as an unresponsive interface.
+      same law: slower feedback reads as an unresponsive interface. Vercel
+      sets the mutation and virtualization perceived-performance targets
+      (folded in from retired near-duplicate CRAFT-006); Freiberg showed
+      removing motion can make the same action feel faster.
     sources: [interface-craft, motion-design]
     tension: ""
 
@@ -1037,7 +1079,7 @@ rules:
       and gesture-released animations inherit release velocity (springs or
       equivalent).
     category: motion
-    check_type: vision
+    check_type: behavioral
     threshold: "0 input-blocking animations; mid-animation input visibly retargets; gesture release uses velocity handoff"
     severity: block
     rationale: >-
@@ -1094,7 +1136,12 @@ rules:
       context menus open with no entrance animation; Apple HIG says avoid
       motion on frequent interactions).
     sources: [interface-craft, motion-design]
-    tension: ""
+    tension: >-
+      Contradicts MOTION-013, which has popovers/dropdowns growing from their
+      trigger (transform-origin at the button, scale-in): a dropdown cannot
+      both grow from its button and render with a 0ms entrance. The
+      contradiction is inherited from interface-craft itself. For gating,
+      this rule's number wins: 0ms dropdown entrance.
 
   - id: MOTION-010
     statement: >-
@@ -1163,7 +1210,12 @@ rules:
       Motion's job is narrating where objects come from to preserve the mental
       model of continuity (Freiberg; Willenskomer).
     sources: [interface-craft, motion-design]
-    tension: ""
+    tension: >-
+      Contradicts MOTION-009, which gives dropdowns and other high-frequency
+      surfaces a 0ms entrance: an element cannot both grow from its trigger
+      and appear instantly. The contradiction is inherited from
+      interface-craft itself. MOTION-009's 0ms number wins for gating;
+      this rule's origin discipline governs the surfaces that do animate.
 
   - id: MOTION-014
     statement: >-
@@ -1209,6 +1261,7 @@ rules:
       have a zag."
     sources: [brand-identity]
     tension: ""
+    applies_to: [identity, project]
 
   - id: BRAND-002
     statement: >-
@@ -1220,11 +1273,13 @@ rules:
     category: brand-identity
     check_type: vision
     threshold: "3/3 criteria pass; describable in 1 sentence; expresses <= 1 idea"
-    severity: block
+    severity: flag
     rationale: >-
       Haviv: a great mark must be appropriate, distinctive enough to be
       remembered, and simple enough to work in every situation — timelessness
-      follows.
+      follows. Downgraded from block in the 2026-07-03 audit: "doodleable
+      after one exposure" has no defined evaluation protocol; this rule
+      blocks again once one is defined.
     sources: [brand-identity]
     tension: ""
 
@@ -1265,7 +1320,7 @@ rules:
       represented identically everywhere in the product (same label, icon,
       color, and position class) — one program, not a collection of one-offs.
     category: brand-identity
-    check_type: deterministic
+    check_type: vision
     threshold: "0 divergent representations of the same semantic across screens"
     severity: flag
     rationale: >-
@@ -1388,11 +1443,13 @@ rules:
     category: content-information
     check_type: vision
     threshold: "0 elements failing the omission test (cover it; does meaning or capability change?); 0 decorative elements with no nameable function"
-    severity: block
+    severity: flag
     rationale: >-
       Rams' central principle is to omit the unimportant to emphasize the
       important; Tufte's data-ink ratio makes the same cut mechanical for
-      charts.
+      charts. Downgraded from block in the 2026-07-03 audit: per-element
+      deletion judgment is contested with no evaluation protocol defined;
+      this rule blocks again once one exists.
     sources: [rams-functionalism, information-design]
     tension: ""
 
@@ -1410,6 +1467,7 @@ rules:
       quantities represented.
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: INFO-003
     statement: >-
@@ -1425,6 +1483,7 @@ rules:
       factor; Few's mistake #7).
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: INFO-004
     statement: >-
@@ -1442,22 +1501,8 @@ rules:
     sources: [refactoring-ui]
     tension: ""
 
-  - id: INFO-005
-    statement: >-
-      Every empty state is designed: a zero-data view states what belongs
-      there and shows an emphasized call-to-action for creating the first item
-      (optionally with an illustration or templates) — never a bare header row
-      or "No results" — and controls that do nothing without content (filters,
-      sort, tabs) are hidden in the empty state.
-    category: content-information
-    check_type: vision
-    threshold: "every list/collection view has a designed empty state with 1 emphasized CTA and 0 visible non-functional controls"
-    severity: flag
-    rationale: >-
-      The empty state is a new user's first impression; it should prompt
-      creation, not present dead chrome.
-    sources: [refactoring-ui, interface-craft]
-    tension: ""
+  # INFO-005 retired 2026-07-03: merged into COMP-003 (designed empty states).
+  # ID permanently retired — never reuse.
 
   - id: INFO-006
     statement: >-
@@ -1472,6 +1517,7 @@ rules:
       mistake #2).
     sources: [information-design]
     tension: ""
+    applies_to: [dashboard]
 
   - id: INFO-007
     statement: >-
@@ -1487,6 +1533,7 @@ rules:
       eye travel and working-memory mapping.
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: INFO-008
     statement: >-
@@ -1502,6 +1549,7 @@ rules:
       fractions are discernible by angle.
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: INFO-009
     statement: >-
@@ -1518,6 +1566,7 @@ rules:
       than length and ~2x more accurate than angle.
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: INFO-010
     statement: >-
@@ -1548,6 +1597,7 @@ rules:
       value (Few's mistake #3).
     sources: [information-design]
     tension: ""
+    applies_to: [dashboard]
 
   - id: INFO-012
     statement: >-
@@ -1563,6 +1613,7 @@ rules:
       (Tufte).
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   # ---------------------------------------------------------------- accessibility
   - id: A11Y-001
@@ -1686,13 +1737,19 @@ rules:
       animation also persists in a static visual after the animation ends.
     category: accessibility
     check_type: vision
-    threshold: "grayscale render preserves all encoded distinctions; 0 red/green-only distinctions (deuteranopia-sim distinguishable or redundant channel); state legible from a static screenshot after animation completes"
+    threshold: "grayscale render preserves all encoded distinctions; 0 red/green-only distinctions (deuteranopia-sim distinguishable or redundant channel)"
     severity: block
     rationale: >-
       WCAG SC 1.4.1 plus Few's red/green rule and Apple's requirement that
       motion be optional — second channels are mandatory.
     sources: [critique-process, information-design, motion-design]
-    tension: ""
+    tension: >-
+      The original threshold clause "state legible from a static screenshot
+      after animation completes" is a runtime requirement: verifying that a
+      state persists once an animation ends needs interaction, i.e. a
+      behavioral check no engine runs yet. The requirement still stands (it
+      remains in the statement); vision review covers the static channels
+      until a behavioral engine exists.
 
   - id: A11Y-009
     statement: >-
@@ -1752,6 +1809,7 @@ rules:
       with a range of browsers, assistive technologies, and devices.
     sources: [system-governance]
     tension: ""
+    applies_to: [project]
 
   - id: A11Y-013
     statement: >-
@@ -1764,6 +1822,20 @@ rules:
     rationale: >-
       WCAG 2.2 AA SC 2.5.7 protects users with limited fine-motor control
       from drag-only functionality.
+    sources: [critique-process]
+    tension: ""
+
+  - id: A11Y-014
+    statement: >-
+      Every content image carries alternative text; purely decorative images are
+      explicitly marked as such (empty alt or presentation role), never left bare.
+    category: accessibility
+    check_type: deterministic
+    threshold: "0 content images without alt text; decorative images alt=\"\" or role=presentation"
+    severity: block
+    rationale: >-
+      WCAG 2.2 A SC 1.1.1 — non-text content requires a text alternative; added
+      in the 2026-07-03 audit pass, which found no school had contributed it.
     sources: [critique-process]
     tension: ""
 
@@ -1781,6 +1853,7 @@ rules:
       chartjunk that actively interferes with reading.
     sources: [information-design]
     tension: ""
+    applies_to: [chart, dashboard]
 
   - id: CRAFT-002
     statement: >-
@@ -1847,20 +1920,8 @@ rules:
     sources: [saas-quality-culture]
     tension: ""
 
-  - id: CRAFT-006
-    statement: >-
-      Perceived-performance budget: every input gets visual acknowledgment
-      within 100ms, mutation round-trips target under 500ms, and lists over 50
-      items are virtualized.
-    category: craft-detail
-    check_type: deterministic
-    threshold: "feedback <= 100ms; mutations < 500ms; virtualize at > 50 items"
-    severity: flag
-    rationale: >-
-      Vercel sets the mutation and virtualization targets; Freiberg showed
-      removing motion can make the same action feel faster.
-    sources: [interface-craft]
-    tension: ""
+  # CRAFT-006 retired 2026-07-03: merged into MOTION-001 (100ms input acknowledgment).
+  # ID permanently retired — never reuse.
 
   # ---------------------------------------------------------------- process-workflow
   - id: PROC-001
@@ -1878,6 +1939,7 @@ rules:
       work as the one unforgivable move (Saarinen).
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-002
     statement: >-
@@ -1893,6 +1955,7 @@ rules:
       "verify the real surface" principle exists for this.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-003
     statement: >-
@@ -1910,6 +1973,7 @@ rules:
       consistent, understood at the point of fruition.
     sources: [swiss-grid]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-004
     statement: >-
@@ -1926,6 +1990,7 @@ rules:
       Vignelli shows arbitrary formats lead to chaos.
     sources: [swiss-grid]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-005
     statement: >-
@@ -1942,6 +2007,7 @@ rules:
       otherwise good typography is luck (Butterick).
     sources: [typography-canon]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-006
     statement: >-
@@ -1960,6 +2026,7 @@ rules:
       context, questions, then feedback.
     sources: [critique-process]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-007
     statement: >-
@@ -1976,22 +2043,10 @@ rules:
       the director decides, which is what keeps candor safe.
     sources: [critique-process]
     tension: ""
+    applies_to: [org]
 
-  - id: PROC-008
-    statement: >-
-      A new component or pattern is admitted to the system only with evidence
-      it is useful (at least 2 independent teams/services need it) and unique
-      (cannot be composed from existing components); replication of an
-      existing component is rejected absent superiority evidence.
-    category: process-workflow
-    check_type: process
-    threshold: ">= 2 independent documented use cases; 0 duplication of existing components absent superiority evidence"
-    severity: block
-    rationale: >-
-      GOV.UK's working group tests every proposal against published "useful
-      and unique" criteria before it enters the backlog.
-    sources: [system-governance]
-    tension: ""
+  # PROC-008 retired 2026-07-03: merged into COMP-011 (no duplicated primitives).
+  # ID permanently retired — never reuse.
 
   - id: PROC-009
     statement: >-
@@ -2007,6 +2062,7 @@ rules:
       representative users including those with disabilities.
     sources: [system-governance]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-010
     statement: >-
@@ -2023,6 +2079,7 @@ rules:
       a surprise.
     sources: [system-governance]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-011
     statement: >-
@@ -2039,6 +2096,7 @@ rules:
       application.
     sources: [brand-identity]
     tension: ""
+    applies_to: [identity]
 
   - id: PROC-012
     statement: >-
@@ -2057,6 +2115,7 @@ rules:
       changes"; Lopp: pixel-perfect mocks remove all ambiguity.
     sources: [rams-functionalism, apple-hig]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-013
     statement: >-
@@ -2073,6 +2132,7 @@ rules:
       committing (Lopp, SXSW 2008).
     sources: [apple-hig]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-014
     statement: >-
@@ -2088,6 +2148,7 @@ rules:
       focus as a minute-by-minute discipline.
     sources: [apple-hig]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-015
     statement: >-
@@ -2104,6 +2165,7 @@ rules:
       (Vercel review format).
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-016
     statement: >-
@@ -2120,6 +2182,7 @@ rules:
       deferred-beauty backlog as a failure mode.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-017
     statement: >-
@@ -2138,6 +2201,7 @@ rules:
       precision.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-018
     statement: >-
@@ -2152,6 +2216,7 @@ rules:
       the team's standard downward.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-019
     statement: >-
@@ -2167,6 +2232,7 @@ rules:
       held constant while scope flexes (Saarinen).
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-020
     statement: >-
@@ -2181,6 +2247,7 @@ rules:
       enforced by machines, not reviewer vigilance.
     sources: [system-governance]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-021
     statement: >-
@@ -2196,6 +2263,7 @@ rules:
       keeps tokens portable across tools.
     sources: [system-governance]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-022
     statement: >-
@@ -2214,6 +2282,7 @@ rules:
       format, and the anti-swoop-and-poop norm all protect signal quality.
     sources: [critique-process]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-023
     statement: >-
@@ -2232,6 +2301,7 @@ rules:
       reasoned booklet — the argument, not theatrics, sells the mark.
     sources: [brand-identity]
     tension: ""
+    applies_to: [identity]
 
   - id: PROC-024
     statement: >-
@@ -2251,6 +2321,7 @@ rules:
       groups.
     sources: [brand-identity]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-025
     statement: >-
@@ -2267,6 +2338,7 @@ rules:
       uses as little design as possible.
     sources: [rams-functionalism]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-026
     statement: >-
@@ -2282,6 +2354,7 @@ rules:
       enhances a working structure instead of propping up a broken one.
     sources: [refactoring-ui]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-027
     statement: >-
@@ -2298,6 +2371,7 @@ rules:
       your goal.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [project]
 
   - id: PROC-028
     statement: >-
@@ -2314,6 +2388,7 @@ rules:
       retained daily, not dashboards.
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-029
     statement: >-
@@ -2328,6 +2403,7 @@ rules:
       quality (Saarinen).
     sources: [saas-quality-culture]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-030
     statement: >-
@@ -2344,6 +2420,7 @@ rules:
       from contaminating each other.
     sources: [apple-hig]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-031
     statement: >-
@@ -2359,6 +2436,7 @@ rules:
       logged on the public community backlog.
     sources: [system-governance]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-032
     statement: >-
@@ -2378,6 +2456,7 @@ rules:
       flow (IDEO).
     sources: [critique-process]
     tension: ""
+    applies_to: [org]
 
   - id: PROC-033
     statement: >-
@@ -2393,3 +2472,4 @@ rules:
       field tests as realistically as possible.
     sources: [brand-identity]
     tension: ""
+    applies_to: [org]
