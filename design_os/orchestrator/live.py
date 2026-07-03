@@ -9,14 +9,24 @@ and callers should pass max_iterations=1 to run_target for url-based targets
 so the loop doesn't burn real render/critique calls it can't act on.
 """
 from pathlib import Path
+import shutil
 import yaml
 
-from design_os.critique.runner import run_qa, run_vision_critique, parse_vision_manifest
-from design_os.critique.rubric_prompt import build_rubric_prompt
+from design_os.critique.lenses import DEFAULT_LENSES, build_lens_prompt, merge_lens_verdicts
+from design_os.critique.runner import (
+    parse_lens_verdicts,
+    parse_vision_manifest,
+    run_qa,
+    run_vision_critique,
+)
+from design_os.critique.rubric_prompt import build_rubric_prompt, SCREENSHOT_INSTRUCTION
 from design_os.dashboard.build import record_run
 from design_os.gate import submit, finalize
+from design_os.lint.engine import load_bindings, run_lint
+from design_os.lint.extract import extract_style_snapshot, write_snapshot
 from design_os.orchestrator.run import RunDeps, run_target
 from design_os.orchestrator.signals import Target
+from design_os.rules.loader import DEFAULT_CATALOG_PATH, load_catalog, load_waivers
 
 
 def build_audit_spec(work_dir: Path) -> Path:
@@ -52,31 +62,113 @@ def _no_op_apply_deterministic_fix(finding: dict, overrides_path: Path) -> bool:
     return False
 
 
-def build_live_deps(work_root: Path, store, run_date: str, pass_threshold: int = 25) -> RunDeps:
+def write_lens_prompt_files(work_dir: Path, rules) -> dict[str, Path]:
+    """Write one prompt file per critique lens; lenses with no vision rules are skipped
+    loudly rather than silently judging nothing."""
+    paths: dict[str, Path] = {}
+    for lens in DEFAULT_LENSES:
+        try:
+            prompt = build_lens_prompt(lens, rules, screenshot_instruction=SCREENSHOT_INSTRUCTION)
+        except ValueError as exc:
+            print(f"WARN: skipping lens {lens.key}: {exc}")
+            continue
+        path = Path(work_dir) / f"lens-{lens.key}-prompt.txt"
+        path.write_text(prompt, encoding="utf-8")
+        paths[lens.key] = path
+    return paths
+
+
+def build_live_deps(
+    work_root: Path,
+    store,
+    run_date: str,
+    pass_threshold: int = 25,
+    catalog_path: Path = DEFAULT_CATALOG_PATH,
+    waivers_path: Path | None = None,
+    today=None,
+) -> RunDeps:
     """Construct a RunDeps wired to the real render/critique/gate pipeline.
 
     work_root is a per-invocation scratch directory (screenshots, manifests, the
     audit spec and rubric prompt files, and the CSS-overrides dir run_target always
     computes a path under even though apply_deterministic_fix never writes to it).
+
+    When the rule catalog exists, every critique additionally runs the harness:
+    the three-lens critique panel (per-rule vision verdicts) and the deterministic
+    lint pass over a live style snapshot. Verdicts land on CritiqueResult.verdicts,
+    where run_target's block-gate picks them up.
     """
+    from datetime import date
+
     work_root = Path(work_root)
     overrides_dir = work_root / "overrides"
     overrides_dir.mkdir(parents=True, exist_ok=True)
     spec_path = build_audit_spec(work_root)
     prompt_path = write_rubric_prompt_file(work_root)
 
+    rules = []
+    waivers = []
+    lens_prompt_paths: dict[str, Path] = {}
+    bindings = []
+    catalog_path = Path(catalog_path)
+    if catalog_path.exists():
+        rules = load_catalog(catalog_path)
+        bindings = load_bindings()
+        if waivers_path is not None:
+            waivers = load_waivers(
+                Path(waivers_path), {r.id for r in rules}, today=today or date.today()
+            )
+        lens_prompt_paths = write_lens_prompt_files(work_root, rules)
+    else:
+        print(f"WARN: no rule catalog at {catalog_path}; running legacy single-rubric critique only")
+
+    # render() records the target it just rendered so critique(), whose signature is
+    # fixed by RunDeps, knows which URL/id the harness passes belong to.
+    current: dict = {}
+
     def render(target: Target) -> Path:
         env_file = work_root / f"{target.id}.env"
         if not env_file.exists():
             env_file.write_text("", encoding="utf-8")
         run_root = work_root / "runs" / target.id
+        current["target"] = target
         return run_qa(env_file, run_root, base_url=target.url, spec=spec_path)
 
     def critique(run_dir: Path):
         # run_qa is invoked with a fixed --spec; run_vision_critique doesn't take one,
         # so point it at the same audit-spec-driven run_dir qa.py just wrote to.
         manifest_path = run_vision_critique(run_dir, prompt_path)
-        return parse_vision_manifest(manifest_path)
+        result = parse_vision_manifest(manifest_path)
+        if not rules:
+            return result
+
+        target: Target = current["target"]
+
+        # Lens panel: one vision pass per lens; vision.py always writes
+        # vision-manifest.json, so each pass's manifest is moved aside by lens key.
+        per_lens: dict[str, list[dict]] = {}
+        for lens_key, lens_prompt_path in lens_prompt_paths.items():
+            try:
+                lens_manifest = run_vision_critique(run_dir, lens_prompt_path)
+                kept = Path(run_dir) / f"vision-manifest-{lens_key}.json"
+                shutil.move(str(lens_manifest), str(kept))
+                per_lens[lens_key] = parse_lens_verdicts(kept)
+            except Exception as exc:  # a dead lens degrades the panel, not the run
+                print(f"WARN: lens {lens_key} failed for {target.id}: {exc}")
+        vision_verdicts = merge_lens_verdicts(per_lens, rules, target_id=target.id, waivers=waivers)
+
+        # Deterministic lint over a live style snapshot.
+        lint_verdicts = []
+        if target.url:
+            try:
+                snapshot = extract_style_snapshot(target.url)
+                write_snapshot(snapshot, Path(run_dir) / "style-snapshot.json")
+                lint_verdicts = run_lint(snapshot, rules, bindings, target_id=target.id, waivers=waivers)
+            except Exception as exc:
+                print(f"WARN: style-snapshot lint failed for {target.id}: {exc}")
+
+        result.verdicts = lint_verdicts + vision_verdicts
+        return result
 
     def submit_item(item: dict) -> str:
         return submit(store, item)
