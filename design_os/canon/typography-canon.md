@@ -41,3 +41,43 @@ Third: honesty of material and restraint of signal. All three treat mechanically
 | Hierarchy is consistent and shallow: each heading level is signaled by the same cue-set everywhere it appears; prefer one changed variable per level; no more than 3 heading levels in a document — deeper structure means the writing, not the type, needs work. | hierarchy | deterministic | ≤3 heading levels used; per level, 100% identical style (size, weight, case, spacing); each level differs from its parent by ≥1 and ideally 1–2 variables | flag | Butterick "Headings: no more than three levels"; Lupton, *Thinking with Type*, "Hierarchy" (consistent cues; restraint over redundant signals) |
 | Centered and vertical type are ceremonial exceptions: centered alignment only for short lapidary fragments (title pages, invitations), never body paragraphs; vertically stacked type only in all-caps — stacked lowercase is a type crime (mismatched widths wreck the column). | typography | deterministic | 0 centered paragraphs > 3 lines; 0 vertically stacked lowercase; rotated (90°) type preferred over stacking for spine-like labels | advise | Butterick "Centered text: use sparingly"; Lupton, type crime "stacked lowercase" |
 | Read-then-set gate: before any type is chosen, the record shows a one-paragraph statement of what the text is, who reads it, and what the text's goals are; every subsequent typographic choice must cite a goal it serves. Body text is designed and signed off first; headings and decoration only after. | process-workflow | process | 1 written text-goals brief predating type choices; body-text spec (size, leading, measure, face) approved before any heading/display styling exists | block | Bringhurst §1.1 "Read the text before designing it"; Butterick "Typography in ten minutes" (body text first); Butterick "What is good typography?" |
+
+## Workflow practices
+
+1. **Read the text before designing it.** Bringhurst's first instruction. Write down what the text is, who it is for, and what it must accomplish; typography is then chosen to honor and reveal that content ("choose faces that suit the task as well as the subject"). If the goals are misunderstood, "good typography is purely a matter of luck" (Butterick).
+2. **Design body text first, everything else after.** Butterick's ten-minute method: fix the big four — point size, line spacing, line length, font — for the body copy before touching headings, decoration, or layout, "because there's more body text than anything else." Headings inherit from, and are measured against, the settled body spec.
+3. **Choose a basic leading, then compose vertically in multiples of it.** Every block-level intrusion (heading + its margins, figure, blockquote) consumes a whole number of base lines (11/13 text → 26, 39, 52 pt intrusions). Vertical spacing decisions become arithmetic, not eyeballing.
+4. **Pick sizes from a modular scale declared up front.** "A few proportional intervals" (Bringhurst) — e.g. the classic 6-7-8-9-10-11-12-14-16-18-21-24-36-48-60-72 series or a ratio-based scale — and never mint a new size per element. Adjacent levels must differ enough to be read as different on purpose (Lupton).
+5. **One variable at a time.** When a page reads badly, adjust a single quantity within its band (size, leading, measure) and re-judge, rather than changing several at once; the bands (120–145%, 45–90 chars) define the legal search space.
+6. **Proof at actual size, in the target medium.** Bringhurst: proofread at actual size to catch rivers, collisions, and spacing faults that are invisible zoomed out; Butterick's web ranges (15–25 px) exist precisely because screen and print differ — test where the reader reads.
+7. **Learn the rules before breaking them, and break them on the record.** Lupton teaches every rule alongside historical examples of principled violation; a break is legitimate only when the rule was known and the text's goals demanded the exception — that rationale gets written down (this is the harness's waiver path).
+8. **Run the type-crimes lint pass before sign-off.** A final mechanical sweep for fakes and lazy defaults: straight quotes, double word spaces, `--` dashes, faux styles, stretched glyphs, tracked lowercase, underlined emphasis, default fonts.
+
+## Anti-patterns (reject on sight)
+
+- **Times New Roman or Arial as the chosen face of finished work** — "it connotes apathy" (Butterick); ditto Comic Sans, goofy display faces for prose, and monospaced fonts outside code.
+- **Faked type**: faux bold/italic synthesized by the renderer, pseudo small caps (shrunken capitals), mechanically slanted "italics," horizontally or vertically scaled/stretched letterforms (Lupton's core type crimes).
+- **Letterspaced (tracked) lowercase body text** — "a man who would letterspace lower case would steal sheep" (Goudy, via Bringhurst); conversely, all-caps runs with *no* added letterspacing.
+- **Bold and italic combined on one run; underlined emphasis; ALL-CAPS paragraphs** (caps beyond one line of text).
+- **Default spacing left untouched**: single/double word-processor line spacing or CSS `line-height: normal` instead of an explicit 120–145%; lines running 100+ characters full-window; text touching the viewport or page edge (margins under ~1 inch in print).
+- **Both a first-line indent and inter-paragraph space** on the same paragraphs — a doubled signal.
+- **Typewriter habits**: straight quotes as quotation marks, two spaces after periods, runs of spaces or empty returns used for alignment, `--` as a dash, `...` as an ellipsis.
+- **Justified text with hyphenation off**, and the rivers and gappy lines it produces.
+- **Tentative hierarchy**: heading sizes 1 pt away from body size ("tentative and arbitrary" — Lupton), or the opposite crime — every level shouting with size + weight + color + caps simultaneously; more than three heading levels.
+- **Ad-hoc size zoo**: a new font size invented for every element instead of steps on one scale.
+- **Stacked lowercase vertical type** (mismatched letter widths destroy the column; stack caps or rotate the line instead).
+- **Exclamation-point inflation** — more than one per three pages of text (Butterick).
+
+## In their words
+
+- "Typography exists to honor content." — Robert Bringhurst, *The Elements of Typographic Style*
+- "Space in typography is like time in music. It is infinitely divisible, but a few proportional intervals can be much more useful than a limitless choice of arbitrary quantities." — Bringhurst
+- "Anything from 45 to 75 characters is widely regarded as a satisfactory length of line… the 66-character line (counting both letters and spaces) is widely regarded as ideal." — Bringhurst
+- "Letters have a life and dignity of their own." — Bringhurst
+- "A man who would letterspace lower case would steal sheep." — Frederic Goudy, quoted approvingly by Bringhurst
+- "Typography matters because it helps conserve the most valuable resource you have as a writer — reader attention." — Matthew Butterick, *Practical Typography*
+- "Typography that reinforces the meaning of the text, even if aesthetically unpleasant, is a success… Sometimes ugly is better than pretty." — Butterick, "What is good typography?"
+- "When Times New Roman appears in a book, document, or advertisement, it connotes apathy." — Butterick
+- "Typography is what language looks like." — Ellen Lupton, *Thinking with Type*
+- "Design is as much an act of spacing as an act of marking. The typographer's art concerns not only the positive grain of letterforms, but the negative gaps between and around them." — Lupton
+- "Typography is a tool for doing things with: shaping content, giving language a physical body, enabling the social flow of messages." — Lupton
