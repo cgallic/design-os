@@ -1,0 +1,2475 @@
+version: 1
+generated_from: canon files in design_os/canon/
+# Canonical rule catalog synthesized from 12 schools (230 candidate rules -> 150 canonical).
+# Completeness-audit pass applied 2026-07-03: check_type relabels (vision/behavioral),
+# unadjudicable blocks downgraded to flag, near-dupes merged (CRAFT-006, INFO-005,
+# PROC-008, SPACE-005 retired — IDs never reused), applies_to scoping and tension records
+# added; 146 rules remain.
+# Ordering: within each ID prefix, blocks first, then flags, then advise.
+# Source slugs map 1:1 to design_os/canon/*.md basenames.
+rules:
+
+  # ---------------------------------------------------------------- typography
+  - id: TYPE-001
+    statement: >-
+      Zero type deformation or synthesis: no stretched, squeezed, skewed,
+      outlined, or shadowed type; no faux bold, mechanically slanted italics,
+      or pseudo small caps; horizontal scale locked at 100%; type is never a
+      decorative material.
+    category: typography
+    check_type: deterministic
+    threshold: "font-stretch = 100%; text scaleX/scaleY = 1.0; 0 skew/non-uniform transforms on text; font-synthesis: none (0 synthesized weights/styles); small caps only via real smcp glyphs"
+    severity: block
+    rationale: >-
+      Vignelli was "horrified by any type deformation"; Lupton names fakes as
+      core type crimes that distort stroke contrast and look forced.
+    sources: [swiss-grid, typography-canon]
+    tension: ""
+
+  - id: TYPE-002
+    statement: >-
+      Body text size sits in the reading band for the medium: 15-25 px on
+      screen (platform ramps: body ~17 pt equivalent), 10-12 pt in print;
+      display-only artifacts exempt.
+    category: typography
+    check_type: deterministic
+    threshold: "web/app body font-size 15-25 px; print body 10-12 pt; Apple-platform body >= 17 pt equivalent"
+    severity: block
+    rationale: >-
+      Butterick names point size first among the choices that determine most of
+      a document's typographic quality; Apple's ramp centers body at 17 pt.
+    sources: [typography-canon, apple-hig]
+    tension: ""
+
+  - id: TYPE-003
+    statement: >-
+      Minimum rendered text size: no text smaller than 11 pt (~14.7 CSS px at
+      1x); supporting/secondary UI text never shrinks below 12 px — de-emphasize
+      with color or weight instead; tvOS floor is 23 pt for viewing distance.
+    category: typography
+    check_type: deterministic
+    threshold: "0 rendered text < 11 pt (~14.7 CSS px) for content text; supporting UI text >= 12 px; tvOS >= 23 pt"
+    severity: block
+    rationale: >-
+      11 pt is the HIG's built-in legibility floor; Refactoring UI forbids
+      shrinking supporting text below 12 px as a hierarchy device.
+    sources: [apple-hig, refactoring-ui]
+    tension: ""
+
+  - id: TYPE-004
+    statement: >-
+      Line spacing is explicit and proportional: continuous body text uses
+      line-height 1.2-1.5 (up to 2.0 only for measures wider than 75 ch);
+      large headings (>= 30 px) tighten to <= 1.3; word-processor defaults and
+      CSS 'normal' are not explicit values and fail.
+    category: typography
+    check_type: deterministic
+    threshold: "body line-height/font-size in [1.20, 1.50] (up to 2.0 for >75ch measures); headings >= 30px: <= 1.3; 0 uses of unset/'normal' line-height on body text; one ratio per text role"
+    severity: block
+    rationale: >-
+      Butterick fixes 120-145% for comfortable reading; Refactoring UI scales
+      leading with size and measure; leading too tight or loose fatigues the
+      reader (Muller-Brockmann).
+    sources: [typography-canon, refactoring-ui, swiss-grid]
+    tension: >-
+      swiss-grid (Vignelli's metal-type table) prescribes 1.08-1.25 for print
+      columns; the web canon (Butterick 1.2-1.45, Refactoring UI up to 2.0 on
+      wide measures) is looser. The harness adopts the web band and leaves the
+      tighter print band to declared print artifacts.
+
+  - id: TYPE-005
+    statement: >-
+      Body-text measure stays in the readable band: 45-90 characters per line
+      including spaces (ideal ~66); wide layouts constrain the text column
+      (max-width in em/ch) instead of letting lines run full width;
+      multi-column text targets 40-50.
+    category: typography
+    check_type: deterministic
+    threshold: "hard band 45-90 chars/line; flag single-column prose outside 45-75; multi-column 40-50; paragraph max-width set in em/ch"
+    severity: block
+    rationale: >-
+      The measure maps to the eye's span — too short ping-pongs, too long loses
+      the return sweep (Bringhurst); Butterick sets the hard 45-90 band.
+    sources: [typography-canon, refactoring-ui, swiss-grid]
+    tension: >-
+      swiss-grid (Muller-Brockmann/Ruder) holds the tighter 45-60 chars
+      (7-10 words) as the legibility rule; the harness blocks only outside
+      45-90 and flags outside 45-75, treating 45-60 as the aspirational target.
+
+  - id: TYPE-006
+    statement: >-
+      Typeface budget: at most 2 font families per view/artifact (one text
+      face, optionally one contrasting display/UI face; code monospace exempt),
+      all drawn from the declared brand/system spec; a third family requires
+      written functional justification.
+    category: typography
+    check_type: deterministic
+    threshold: "<= 2 font families per artifact (code monospace exempt); 0 fonts outside the declared spec; 100% from a declared shortlist"
+    severity: block
+    rationale: >-
+      Braun ran decades on one face; Vignelli mounted a career on roughly six;
+      Butterick and Bierut treat an identity's typography as a closed set,
+      not a menu.
+    sources: [swiss-grid, typography-canon, brand-identity, rams-functionalism]
+    tension: >-
+      rams-functionalism holds to a single family per product;
+      brand-identity allows a system spec of ~2 families with 5 as a hard
+      ceiling. The harness enforces <= 2 per artifact and treats 1 as the ideal.
+
+  - id: TYPE-007
+    statement: >-
+      Emphasis is a single sparse signal: bold OR italic, never both on one
+      run; underlining never (hyperlinks excepted); all-caps only for runs
+      shorter than one line; emphasized text stays rare in body copy.
+    category: typography
+    check_type: deterministic
+    threshold: "0 bold+italic runs; 0 underlined non-link text; all-caps runs < 1 line; emphasized <= 5% of body characters"
+    severity: block
+    rationale: >-
+      Butterick: emphasis works only when scarce and single-channel; doubled
+      signals and underlining are typewriter-era noise.
+    sources: [typography-canon]
+    tension: ""
+
+  - id: TYPE-008
+    statement: >-
+      Font sizes come from one declared scale of whole px/rem values, never
+      one-offs, never em-defined, never fractional; adjacent used steps differ
+      perceptibly and a single view uses a small fixed set of sizes.
+    category: typography
+    check_type: deterministic
+    threshold: "100% of font sizes in one declared scale (<= 7 steps used per artifact); adjacent used steps differ >= 15% or >= 2 pt; <= 4 distinct sizes per view; 0 em-based or fractional-px font sizes"
+    severity: block
+    rationale: >-
+      Refactoring UI rejects modular ratios yielding fractional sizes in favor
+      of a hand-picked absolute scale; Bringhurst prefers a few proportional
+      intervals; Lupton calls near-identical sizes "tentative and arbitrary".
+    sources: [refactoring-ui, typography-canon, apple-hig, rams-functionalism, swiss-grid]
+    tension: >-
+      swiss-grid (Vignelli) caps a page at 2 sizes with ~2x display contrast,
+      letting weight and space do the rest; rams-functionalism allows 4.
+      The harness enforces <= 4 per view plus scale membership as the
+      mechanical bound and treats the 2-size discipline as aspirational.
+
+  - id: TYPE-009
+    statement: >-
+      Weight discipline: at most 3 distinct weights per UI, none lighter than
+      400; weights lighter than Regular banned below 20 pt; weight never
+      changes on hover/selected state (layout shift); optical cuts respected
+      (text-optimized faces below ~20 pt, display cuts at and above).
+    category: typography
+    check_type: deterministic
+    threshold: "<= 3 distinct weights; 0 weights < 400; 0 weight changes on interaction state; 0 Thin/Ultralight below 20 pt; text/display optical cutoff ~20 pt"
+    severity: flag
+    rationale: >-
+      Two weights are usually enough for UI work; sub-400 weights fail at small
+      sizes (the iOS 7 legibility backlash), and state-driven weight changes
+      cause reflow.
+    sources: [refactoring-ui, interface-craft, apple-hig]
+    tension: ""
+
+  - id: TYPE-010
+    statement: >-
+      Letterspacing: all-caps and small-caps runs get +5-12% of point size in
+      tracking; lowercase body text gets zero added tracking (never letterspace
+      lowercase); large headlines may be tracked slightly tighter than default.
+    category: typography
+    check_type: deterministic
+    threshold: "uppercase/small-caps letter-spacing 0.05-0.12em (>= +0.03em minimum); lowercase body letter-spacing 0 (+/- 0.01em); headings >= 36px may go to ~-0.02em"
+    severity: flag
+    rationale: >-
+      Fonts are spaced for mixed case: caps need air to read as words, while
+      spaced lowercase destroys word shapes (Goudy via Bringhurst).
+    sources: [typography-canon, refactoring-ui]
+    tension: ""
+
+  - id: TYPE-011
+    statement: >-
+      Alignment serves scanning: continuous text is flush left, ragged right;
+      centered text only for short lapidary fragments, never paragraphs over
+      2-3 lines; justified text requires hyphenation on and no rivers or gappy
+      lines; vertically stacked lowercase is banned (rotate the line instead).
+    category: typography
+    check_type: deterministic
+    threshold: "body text-align left; 0 centered blocks > 3 lines; text-align justify implies hyphens auto and 0 lines with word-space > 0.5em; 0 stacked lowercase"
+    severity: flag
+    rationale: >-
+      Vignelli called justification without care "fundamentally contrived";
+      Ruder held asymmetry most congruous; rivers and stacked lowercase are
+      Lupton type crimes.
+    sources: [swiss-grid, typography-canon, refactoring-ui]
+    tension: ""
+
+  - id: TYPE-012
+    statement: >-
+      Numeric and micro-typographic mechanics: kerning always on; numbers in
+      table columns, timers, and comparisons right-aligned with tabular
+      (fixed-width) figures; old-style figures in running prose where the font
+      provides them.
+    category: typography
+    check_type: deterministic
+    threshold: "font-kerning normal on 100% of text; font-variant-numeric tabular-nums on 100% of numeric columns/timers/comparisons; numeric table columns right-aligned"
+    severity: flag
+    rationale: >-
+      Digit columns only line up with tabular figures; Butterick and Bringhurst
+      both treat kerning and context-fit figures as baseline competence.
+    sources: [interface-craft, typography-canon, refactoring-ui]
+    tension: ""
+
+  - id: TYPE-013
+    statement: >-
+      No default-stack apathy fonts for finished work: Times New Roman, Arial,
+      and Comic Sans banned as body faces; goofy/grunge faces banned for
+      running prose; monospace only for code and tabular data; the artifact
+      declares a professionally designed text face.
+    category: typography
+    check_type: deterministic
+    threshold: "computed body font-family not in {Times New Roman, Arial, Comic Sans MS, bare system default}; monospace only for code/tabular data"
+    severity: flag
+    rationale: >-
+      Butterick: Times New Roman in finished work "connotes apathy" — font
+      choice is the fastest visible improvement.
+    sources: [typography-canon]
+    tension: ""
+
+  # ---------------------------------------------------------------- color
+  - id: COLOR-001
+    statement: >-
+      A signal color carries exactly one meaning everywhere in the product and
+      a meaning is carried by exactly one color; semantic status hues (red,
+      green, amber, blue) appear only with their status meaning (a red element
+      that is not an error or destructive affordance fails).
+    category: color
+    check_type: vision
+    threshold: "1:1 color-to-meaning mapping product-wide, 0 exceptions; status hues only with status semantics"
+    severity: block
+    rationale: >-
+      Braun's documented semantic color coding (green = input, red = output,
+      never swapped) and Geist's semantic scales keep status colors
+      trustworthy.
+    sources: [rams-functionalism, saas-quality-culture]
+    tension: ""
+
+  - id: COLOR-002
+    statement: >-
+      No color literal (hex/rgb/hsl/named) appears in component styles; every
+      color resolves to a named design token defined in the token layer.
+    category: color
+    check_type: deterministic
+    threshold: "0 color literals outside token-definition files"
+    severity: block
+    rationale: >-
+      Material 3, Carbon, and Atlassian lint hardcoded color values as failures
+      because they break theming and mechanical auditability.
+    sources: [system-governance]
+    tension: ""
+
+  - id: COLOR-003
+    statement: >-
+      No gray text on colored backgrounds: text over a saturated fill must be
+      either a hand-adjusted shade of the background's own hue or white;
+      near-zero-saturation gray on a chromatic fill fails; reduced-opacity
+      white is a fallback, not the default.
+    category: color
+    check_type: deterministic
+    threshold: "on backgrounds with saturation > 20%: text hue within +/-30 degrees of bg hue, or pure white; 0 near-zero-saturation grays over chromatic fills"
+    severity: block
+    rationale: >-
+      Gray only reads as de-emphasized on white; on color it looks washed out
+      and dirty — the fix is a hand-picked same-hue color.
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: COLOR-004
+    statement: >-
+      Color is functional, never decorative: every non-neutral color on a
+      functional surface maps to a control, state, brand, or semantic signal
+      (test: name the signal; unnamed means remove or neutralize), with at most
+      one accent hue per screen and a small named chromatic budget per product.
+    category: color
+    check_type: vision
+    threshold: "0 decorative uses of accent color (low-chroma neutrals exempt); <= 1 accent hue per screen; <= 3 chromatic hues per artifact, 100% with a stated identifying function"
+    severity: block
+    rationale: >-
+      Braun treated color as operational language with meaning through
+      scarcity; Vignelli used color as signifier or identifier, never
+      decoration; Geist keeps neutrals carrying the UI with one accent family.
+    sources: [rams-functionalism, swiss-grid, saas-quality-culture]
+    tension: >-
+      Data-viz carve-out: chart data marks are exempt from the <= 3 chromatic
+      hues / 1 accent-per-screen budget — COLOR-008 governs them, allowing up
+      to 7 categorical hues per chart. This screen budget applies to the
+      surrounding UI, not to the color encoding inside data graphics.
+
+  - id: COLOR-005
+    statement: >-
+      Neutral chassis: the overwhelming share of any screen is low-chroma
+      neutral surface; content and signals, not the frame, provide whatever
+      color exists.
+    category: color
+    check_type: deterministic
+    threshold: ">= 90% of pixel area at OKLCH C < 0.03, excluding user content/imagery"
+    severity: flag
+    rationale: >-
+      Braun housings were off-white/grey/anthracite so the product stays
+      unobtrusive and leaves room for the user's content. 2026-07-03 audit:
+      OKLCH C < 0.03 adopted as the single canonical threshold; the earlier
+      mixed-scale "chroma < 10" equivalence was pseudo-precision and was
+      dropped.
+    sources: [rams-functionalism]
+    tension: >-
+      Ambiguous for chart-dense dashboards: if data marks count as user
+      content they are excluded and the screen passes trivially, but if they
+      count as frame they can push a legitimate dashboard past the 10%
+      chromatic budget. The user-content carve-out's boundary is undefined
+      for data graphics.
+
+  - id: COLOR-006
+    statement: >-
+      The palette is defined up front as shade ramps with declared usage roles:
+      a full gray ramp, 1-2 primaries and semantic accents with hand-picked
+      shades, and each ramp step mapped to a role (low steps backgrounds, mid
+      steps borders, top steps text/icons) so contrast holds by construction.
+    category: color
+    check_type: deterministic
+    threshold: "gray ramp 8-10 steps; each chromatic ramp 5-10 steps; every rendered color belongs to a declared ramp; text/icons only from the two highest-contrast steps; backgrounds from low steps, borders from mid steps"
+    severity: flag
+    rationale: >-
+      "You can't build anything with five hex codes" — real UIs need full
+      ramps chosen in advance; Geist maps scale steps to usage roles so every
+      color decision is a selection, not an invention.
+    sources: [refactoring-ui, saas-quality-culture]
+    tension: ""
+
+  - id: COLOR-007
+    statement: >-
+      Token architecture flows down tiers only (component -> system/alias ->
+      reference/global -> raw value) and semantic token names encode role, not
+      appearance; palette-step names (red-500) never appear in component code
+      and component tokens never hold raw values.
+    category: color
+    check_type: deterministic
+    threshold: "3 token tiers; 0 raw values in component tokens; 0 palette-step names referenced from component code; names follow {property}-{element}-{variant}-{state}"
+    severity: flag
+    rationale: >-
+      Material 3's md.ref/md.sys/md.comp architecture and Polaris intent-based
+      naming keep behavior predictable when values change.
+    sources: [system-governance]
+    tension: ""
+
+  - id: COLOR-008
+    statement: >-
+      Categorical color budget: at most 7 distinct hues encoding categories per
+      chart; beyond that use small multiples or gray-plus-highlight.
+    category: color
+    check_type: deterministic
+    threshold: "count(distinct categorical hues) <= 7 per chart"
+    severity: flag
+    rationale: >-
+      Color is the weakest decoding channel (Cleveland/McGill) and Few limits
+      palettes to a small set of soft distinguishable hues.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart]
+
+  - id: COLOR-009
+    statement: >-
+      Sequential quantitative color scales use a single hue (or closely related
+      hues) varying monotonically in lightness — never rainbow/spectral
+      palettes for ordered values.
+    category: color
+    check_type: deterministic
+    threshold: "hue rotation <= ~60 degrees with monotonic lightness ramp; 0 rainbow scales on ordered data"
+    severity: flag
+    rationale: >-
+      Sequential ranges read correctly only when lightness, not hue, carries
+      the order (Few, rule 6).
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: COLOR-010
+    statement: >-
+      Non-data ink is quieter than data ink: gridlines, axes, and borders are
+      thin and low-contrast (never a heavy dual-direction mesh); data colors
+      are soft/muted with fully saturated color reserved for at most one
+      deliberate emphasis class per chart.
+    category: color
+    check_type: deterministic
+    threshold: "gridline stroke <= 1px at <= 25% of data-mark contrast; >= 90% of data-mark area at moderate saturation; <= 1 high-saturation emphasis class per view"
+    severity: flag
+    rationale: >-
+      Tufte: erase and de-emphasize non-data ink; Few: saturation is the
+      scarce "look here" signal, never decoration.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: COLOR-011
+    statement: >-
+      Grays are tinted, not pure: gray tokens carry a slight hue (blue = cool,
+      yellow/brown = warm), with saturation increasing toward the lightness
+      extremes so they don't wash out.
+    category: color
+    check_type: deterministic
+    threshold: "0 pure-neutral grays (saturation 0) in the palette; in a gray ramp, saturation at lightness extremes >= saturation at mid-lightness"
+    severity: advise
+    rationale: >-
+      Saturated grays give the whole UI temperature and keep light/dark
+      extremes from going lifeless (Schoger).
+    sources: [refactoring-ui]
+    tension: ""
+
+  # ---------------------------------------------------------------- spacing-layout
+  - id: SPACE-001
+    statement: >-
+      Every margin, padding, gap, and fixed element size comes from one
+      declared non-linear spacing scale on a 4px or 8px base; arbitrary
+      off-scale one-off values are defects, not taste.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "100% of spacing values in the declared scale; value mod 4 = 0 (or mod 8 where a 2x grid is declared, 2/4px allowed for micro elements); adjacent scale steps differ >= ~25%"
+    severity: block
+    rationale: >-
+      A constrained perceptual scale eliminates ambiguous close-call values;
+      Vercel and Carbon lint off-scale spacing automatically; Rams held
+      nothing may be arbitrary or left to chance.
+    sources: [refactoring-ui, saas-quality-culture, system-governance, rams-functionalism]
+    tension: ""
+
+  - id: SPACE-002
+    statement: >-
+      Every text block, image, and component edge aligns to the declared grid:
+      x-positions on column boundaries, heights and y-positions in whole
+      baseline increments; misalignments within a group are defects. Vertical
+      rhythm derives from one basic leading: the vertical space consumed by
+      every departure from body text (headings, figures, block quotes) is a
+      whole-number multiple of the base line-height.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "100% of element edges within 1px of a declared grid line; vertical positions = 0 mod baseline unit; 0px edge-alignment tolerance within a group; (element height + margins) mod base-leading = 0, +/-1 px, for >= 95% of block-level departures"
+    severity: block
+    rationale: >-
+      Muller-Brockmann's grid fields correspond in depth to whole lines of
+      text and in width to the columns; IBM's 2x grid snaps all geometry to
+      the mini unit. Bringhurst requires adding and deleting vertical space in
+      measured intervals so the page keeps one beat (folded in from retired
+      near-duplicate SPACE-005).
+    sources: [swiss-grid, system-governance, rams-functionalism, typography-canon]
+    tension: ""
+
+  - id: SPACE-003
+    statement: >-
+      A dashboard fits one screen: all information needed for the monitoring
+      objective is visible without scrolling, tabbing, or paging.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "0 scroll required at target viewport for the KPI/monitoring layer"
+    severity: block
+    rationale: >-
+      Few's mistake #1 — a dashboard must be monitorable at a glance, which
+      scrolling destroys.
+    sources: [information-design]
+    tension: ""
+    applies_to: [dashboard]
+
+  - id: SPACE-004
+    statement: >-
+      Gutters are systematic, not improvised: vertical gutters between grid
+      fields equal one or more whole empty text lines, and a single consistent
+      horizontal gutter value derives from the type size.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "vertical gutter = n x line-height (n >= 1); <= 1 distinct horizontal gutter value per layout"
+    severity: flag
+    rationale: >-
+      Muller-Brockmann derives all gutters from the baseline so the grid keeps
+      one rhythmic beat.
+    sources: [swiss-grid]
+    tension: ""
+
+  # SPACE-005 retired 2026-07-03: merged into SPACE-002 (baseline/vertical rhythm).
+  # ID permanently retired — never reuse.
+
+  - id: SPACE-006
+    statement: >-
+      White space is a composed element: every view keeps at least one
+      contiguous empty region of a full grid field or more, and declared
+      outside margins are nonzero on all sides; a layout with every module
+      filled fails.
+    category: spacing-layout
+    check_type: vision
+    threshold: ">= 1 contiguous empty region >= 1 grid field per view; outside margins > 0 on all sides"
+    severity: flag
+    rationale: >-
+      Vignelli: "Bad layouts have no space left for breathing" — the white
+      space makes the layout sing.
+    sources: [swiss-grid]
+    tension: ""
+
+  - id: SPACE-007
+    statement: >-
+      Content and controls respect safe areas and standard layout margins:
+      nothing is clipped by notch, home indicator, or rounded corners; fixed
+      edge UI uses safe-area insets; content insets from screen edges by at
+      least the system margin.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "0 elements outside the safe area; env(safe-area-inset-*) on fixed edge UI; edge insets >= 16 pt (compact) / 20 pt (regular)"
+    severity: flag
+    rationale: >-
+      The HIG requires layouts to adapt to safe areas so hardware features and
+      system gestures never obscure content.
+    sources: [apple-hig, interface-craft]
+    tension: ""
+
+  - id: SPACE-008
+    statement: >-
+      One paragraph signal, not two: either a first-line indent of 1-4x the
+      point size or inter-paragraph space of 4-10 pt — never both on the same
+      paragraphs.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "exactly one of: text-indent 1-4em, or paragraph space 4-10 pt (~0.35-1em); both = fail"
+    severity: flag
+    rationale: >-
+      The two devices are alternatives marking the same boundary; using both
+      doubles the signal (Butterick).
+    sources: [typography-canon]
+    tension: ""
+
+  - id: SPACE-009
+    statement: >-
+      Images and illustration blocks span whole grid fields, and the number of
+      distinct image sizes per document stays small — fewer size variants makes
+      the quieter impression.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "100% of images span whole grid fields (1-4 fields); <= 4 distinct image sizes per document"
+    severity: flag
+    rationale: >-
+      Muller-Brockmann sizes illustrations to whole grid fields and ties
+      uniformity of sizes to visual calm.
+    sources: [swiss-grid]
+    tension: ""
+
+  - id: SPACE-010
+    statement: >-
+      More than 5 overlapping series in one panel ("spaghetti") must split into
+      small multiples; all panels of a small-multiple set share identical
+      scales, aspect ratio, and encoding.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "overlapping line series <= 5 per panel; multiples share identical axis min/max/ticks"
+    severity: flag
+    rationale: >-
+      Tufte: small multiples make high-dimensional comparison legible, but
+      only if every frame is directly comparable.
+    sources: [information-design]
+    tension: >-
+      The source guidance escalates a shared-scale violation (small multiples
+      on differing axes) to block, but the schema cannot represent
+      conditional severity; the rule carries flag and the escalation intent
+      is recorded here.
+    applies_to: [chart, dashboard]
+
+  - id: SPACE-011
+    statement: >-
+      Grid granularity stays in the workable band: 8-32 fields total, 2-6
+      columns for page/screen layouts (6+ only for newspaper-density content);
+      too fine constrains nothing, too coarse permits nothing.
+    category: spacing-layout
+    check_type: deterministic
+    threshold: "8-32 grid fields; 2-6 columns (books/brochures 2-4, newspaper-density 6+)"
+    severity: advise
+    rationale: >-
+      Muller-Brockmann's worked examples run 8-32 fields; Vignelli warns an
+      infinitesimal grid "is equivalent to not being there".
+    sources: [swiss-grid]
+    tension: ""
+
+  # ---------------------------------------------------------------- hierarchy
+  - id: HIER-001
+    statement: >-
+      One voice per view: exactly one primary emphatic element (largest/boldest
+      by size x weight ranking) per screen or spread; multiple elements
+      simultaneously enlarged and emboldened to compete for attention is
+      banned.
+    category: hierarchy
+    check_type: vision
+    threshold: "exactly 1 dominant element per view by size x weight ranking; 0 ties at top level"
+    severity: flag
+    rationale: >-
+      Vignelli calls size-and-weight shouting "intellectual vulgarity" —
+      emphasis comes from structure and silence, not loudness.
+    sources: [swiss-grid]
+    tension: ""
+
+  - id: HIER-002
+    statement: >-
+      Hierarchy is never carried by font size alone: any two text roles that
+      differ in importance also differ in color or weight; secondary/tertiary
+      text is distinguished with 2-3 gray steps at similar size rather than by
+      shrinking.
+    category: hierarchy
+    check_type: vision
+    threshold: "each adjacent text-role pair differs in color or weight, not only size; <= 3 hierarchy text colors (dark/gray/lighter-gray)"
+    severity: flag
+    rationale: >-
+      Relying on size alone is Refactoring UI's canonical beginner mistake;
+      color and weight do the job without giant titles and unreadable fine
+      print.
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: HIER-003
+    statement: >-
+      Hierarchy is consistent and shallow: each heading level uses the
+      identical cue-set everywhere, levels differ from their parent by few
+      variables, and documents use no more than 3 heading levels.
+    category: hierarchy
+    check_type: deterministic
+    threshold: "<= 3 heading levels; per level 100% identical style; each level differs from its parent by >= 1 (ideally 1-2) variables"
+    severity: flag
+    rationale: >-
+      Butterick caps heading depth at three; Lupton requires consistent cues
+      over redundant simultaneous signals.
+    sources: [typography-canon]
+    tension: ""
+
+  - id: HIER-004
+    statement: >-
+      Frequency-of-use placement: rarely used controls (settings,
+      configuration, destructive admin) do not occupy the primary visual
+      field; the primary surface exposes only frequent actions.
+    category: hierarchy
+    check_type: vision
+    threshold: "0 rare-use controls in the primary toolbar/above-the-fold action area"
+    severity: flag
+    rationale: >-
+      Braun literally set seldom-used hi-fi controls on the back of the unit
+      to keep the operating surface clear.
+    sources: [rams-functionalism]
+    tension: ""
+
+  - id: HIER-005
+    statement: >-
+      Deference: app chrome never dominates content — on a content screen,
+      navigation, toolbars, and branding occupy a minority of the viewport and
+      the content region is visually primary.
+    category: hierarchy
+    check_type: vision
+    threshold: "chrome (bars, headers, branding, ads) <= 1/3 of viewport on content screens; largest highest-contrast region is user content"
+    severity: flag
+    rationale: >-
+      Deference is a founding HIG theme: the UI helps people interact with
+      content but never competes with it.
+    sources: [apple-hig]
+    tension: ""
+
+  - id: HIER-006
+    statement: >-
+      Emphasis is achieved subtractively first: when a key element doesn't
+      stand out, de-emphasize its competitors (mute inactive nav, remove a
+      background, lower an icon's contrast beside text) before making the key
+      element bigger, bolder, or brighter.
+    category: hierarchy
+    check_type: vision
+    threshold: "given 'X lacks prominence': competitors muted before X amplified; icons beside text at lower contrast than the text"
+    severity: advise
+    rationale: >-
+      Refactoring UI's signature move for fixing prominence problems without
+      escalating visual noise.
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: HIER-007
+    statement: >-
+      Text hierarchy uses only the enumerated Swiss devices — color, weight, a
+      larger size within budget, rules (lines), blank lines, and line breaks;
+      rules form a two-tier weight system and type hangs from the rule above.
+    category: hierarchy
+    check_type: deterministic
+    threshold: "100% of emphasis from the 6-device list; 2-tier rule weights (~2 pt major / 0.5-1 pt minor); text sits closer to the rule above than below"
+    severity: advise
+    rationale: >-
+      Ruder enumerates exactly six ways of dividing text; Vignelli specifies
+      ruler weights and hanging type.
+    sources: [swiss-grid]
+    tension: ""
+
+  - id: HIER-008
+    statement: >-
+      The most important information occupies the emphasis positions (top-left
+      / upper region) and is visually dominant; supporting detail is
+      subordinated, not co-equal.
+    category: hierarchy
+    check_type: vision
+    threshold: "primary KPI/content group in top-left quadrant; visual-weight ordering matches stated importance ordering"
+    severity: advise
+    rationale: >-
+      Few's dashboard mistakes #8/#9: poor layout and failure to highlight
+      make key measures indistinguishable from the rest.
+    sources: [information-design]
+    tension: ""
+
+  # ---------------------------------------------------------------- components-affordance
+  - id: COMP-001
+    statement: >-
+      Honesty: no element claims capability, progress, urgency, or scarcity
+      that is not real — no fake progress bars, no countdowns without real
+      deadlines, no dark-pattern consent flows, no confirm-shaming, no controls
+      that look enabled but aren't.
+    category: components-affordance
+    check_type: vision
+    threshold: "0 instances from the enumerated deception list: fake progress, fake scarcity/urgency, confirm-shaming, misleading affordances, manipulated defaults"
+    severity: block
+    rationale: >-
+      Good design "does not attempt to manipulate the consumer with promises
+      that cannot be kept" (Rams principle 6).
+    sources: [rams-functionalism]
+    tension: ""
+
+  - id: COMP-002
+    statement: >-
+      Self-explanatory primary function: a first-time viewer correctly
+      identifies what the screen is for and how to perform its primary action
+      without help, tooltips, or documentation.
+    category: components-affordance
+    check_type: vision
+    threshold: "vision model or 5-user test identifies purpose and primary action >= 80% correct, unaided, within 10 seconds"
+    severity: flag
+    rationale: >-
+      Rams: "design riddles are impudent"; Vignelli's pragmatics demands any
+      artifact stand by itself in all its clarity. Downgraded from block in
+      the 2026-07-03 audit: no evaluation protocol for the 5-user/10-second
+      test is defined, so the judgment is not adjudicable; this rule blocks
+      again once a protocol exists.
+    sources: [rams-functionalism, swiss-grid]
+    tension: ""
+
+  - id: COMP-003
+    statement: >-
+      Every reachable UI state is designed: each data-bearing view has explicit
+      loading, empty, error, and permission-denied variants (plus a
+      max-accessibility-text pass), not just the success case with ideal data;
+      the empty state states what belongs there and shows an emphasized
+      call-to-action for creating the first item (optionally with an
+      illustration or templates) — never a bare header row or "No results" —
+      and controls that do nothing without content (filters, sort, tabs) are
+      hidden in it.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "4 non-success states (loading, empty, error, no-permission) present per data-bearing view; 0 default/unstyled fallbacks; empty state has 1 emphasized CTA and 0 visible non-functional controls"
+    severity: block
+    rationale: >-
+      Vercel names "design every reachable state" a core operating principle;
+      Ive's drawer-back craft extends to states people rarely see. The empty
+      state is a new user's first impression and should prompt creation, not
+      present dead chrome (folded in from retired near-duplicate INFO-005).
+    sources: [saas-quality-culture, apple-hig, refactoring-ui, interface-craft]
+    tension: ""
+
+  - id: COMP-004
+    statement: >-
+      No nested modals: a modal/dialog never opens another modal on top of
+      itself.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "max 1 open modal layer at any time"
+    severity: block
+    rationale: >-
+      Nested modals break focus management and keyboard navigation; Vercel
+      lints this deterministically.
+    sources: [saas-quality-culture]
+    tension: ""
+
+  - id: COMP-005
+    statement: >-
+      Native form mechanics are never broken: clicking a label focuses its
+      input, inputs carry correct type/inputmode and are wrapped in forms so
+      Enter submits, paste is never blocked, mobile input font-size is >= 16px
+      (prevents iOS zoom), and inputs never autofocus on touch devices.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "0 violations across the enumerated list; mobile input font-size >= 16px"
+    severity: block
+    rationale: >-
+      Freiberg and Vercel enumerate these as baseline correctness — broken
+      native mechanics are NEVERs, not preferences.
+    sources: [interface-craft]
+    tension: ""
+
+  - id: COMP-006
+    statement: >-
+      Platform contracts are respected: standard components and gestures are
+      used for standard jobs; system gestures (edge swipes, home indicator,
+      pull-to-refresh semantics) are never repurposed or blocked; no lookalike
+      of a system control behaves differently.
+    category: components-affordance
+    check_type: vision
+    threshold: "0 overridden system gestures; 0 nonstandard replicas of standard controls without documented functional reason"
+    severity: block
+    rationale: >-
+      Muscle memory is a system-level contract with the user; the HIG bans
+      redefining standard gestures.
+    sources: [apple-hig]
+    tension: ""
+
+  - id: COMP-007
+    statement: >-
+      Buttons are styled by hierarchy, not semantics: at most one clearly
+      primary action (solid, high-contrast fill) per view; secondary actions
+      outline or soft-fill; tertiary actions styled like links; a destructive
+      action is big-red-solid only when it is the primary action of its context.
+    category: components-affordance
+    check_type: vision
+    threshold: "<= 1 solid high-contrast primary button per view/section; secondary = outline or low-contrast fill; tertiary = link style; destructive solid-red only when primary in context"
+    severity: flag
+    rationale: >-
+      Every action occupies a place in a pyramid of importance; destructive
+      does not automatically mean big, red, and bold (Refactoring UI).
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: COMP-008
+    statement: >-
+      Optimistic by default: toggles take effect immediately without
+      confirmation, mutations update the UI locally and roll back with visible
+      feedback on server error, and submitted buttons disable with a spinner
+      while keeping their original label.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "visual state change <= 100ms after input; rollback + feedback path exists; 0 toggle-confirmation dialogs"
+    severity: flag
+    rationale: >-
+      Freiberg: toggles should immediately take effect; optimistic updates
+      with rollback keep the interface honest and fast.
+    sources: [interface-craft]
+    tension: ""
+
+  - id: COMP-009
+    statement: >-
+      Touch is a first-class mode: no hover-only affordances (gate hover styles
+      behind hover-capable media queries), custom gestures set touch-action,
+      interactive inner content disables user-select, decorative overlays
+      disable pointer-events.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "0 hover-dependent critical affordances; @media (hover: hover) gating on hover styles; touch-action set on custom gesture surfaces"
+    severity: flag
+    rationale: >-
+      Freiberg's touch checklist makes touch parity a requirement, not an
+      afterthought.
+    sources: [interface-craft]
+    tension: ""
+
+  - id: COMP-010
+    statement: >-
+      For 2-3 static options, use radio buttons or segmented controls (all
+      options visible) rather than a select/dropdown.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "select elements with <= 3 static options fail"
+    severity: flag
+    rationale: >-
+      Hiding 2-3 choices behind a dropdown adds a click and hides state for no
+      benefit (Vercel lint).
+    sources: [saas-quality-culture]
+    tension: ""
+
+  - id: COMP-011
+    statement: >-
+      Super-normal default: where a recognized standard pattern or system
+      component exists for a control or flow, use it; re-implementing an
+      existing primitive outside the system fails review, and any deviation
+      from an established archetype requires written functional justification
+      tied to a real capability difference. A new component or pattern is
+      admitted to the system only with evidence it is useful (at least 2
+      independent teams/services need it) and unique (cannot be composed from
+      existing components); replication of an existing component is rejected
+      absent superiority evidence.
+    category: components-affordance
+    check_type: process
+    threshold: "0 undocumented deviations from established archetypes; 0 duplicated primitives re-implemented outside the system; new system components carry >= 2 independent documented use cases and are not composable from existing components"
+    severity: flag
+    rationale: >-
+      Morrison/Fukasawa: "special is generally less useful than normal";
+      GOV.UK's consistency criterion requires reusing existing components,
+      and its working group tests every proposal against published "useful
+      and unique" criteria before it enters the backlog (folded in from
+      retired near-duplicate PROC-008).
+    sources: [rams-functionalism, system-governance, apple-hig]
+    tension: ""
+
+  - id: COMP-012
+    statement: >-
+      Alerts are rare, short, and binary: a one-sentence title stating the
+      situation (never "Error"/"Warning" alone), at most two buttons with the
+      safe action prominent; three or more choices become a sheet or menu;
+      destructive actions are never the default.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "<= 2 buttons per alert; title <= 1 sentence; >= 3 choices -> sheet/menu; destructive != default"
+    severity: flag
+    rationale: >-
+      The HIG treats alerts as interruptions to be minimized and made
+      instantly decidable.
+    sources: [apple-hig]
+    tension: ""
+
+  - id: COMP-013
+    statement: >-
+      Raster/vector scale integrity: icons drawn for 16-24px are never blown up
+      (enclose in a colored shape to add size); full desktop screenshots are
+      never scaled down to unreadable thumbnails — reshoot small, crop, or
+      simplify.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "icon render <= 1.5x native design size; screenshots displayed >= ~70% natural size or replaced by partial/simplified versions"
+    severity: flag
+    rationale: >-
+      Icons enlarged 3-4x look chunky; shrunken screenshots become unreadable —
+      both are scale mismatches Refactoring UI forbids.
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: COMP-014
+    statement: >-
+      Dashboard widget discipline: the same data type/relationship uses the
+      same display form everywhere (chart forms never rotate for decoration),
+      and no radial gauges or speedometer widgets for single measures — use
+      bullet graphs or equivalent linear forms.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "identical measure-types map to identical chart forms across the view; 0 circular gauge widgets; measure-vs-target -> bullet graph or equivalent linear form"
+    severity: flag
+    rationale: >-
+      Few: variety forces re-learning of each display and signals nothing;
+      gauges waste most of their pixels on chrome.
+    sources: [information-design]
+    tension: ""
+    applies_to: [dashboard]
+
+  - id: COMP-015
+    statement: >-
+      A tab bar exposes 3-5 top-level destinations on compact width; more
+      sections means the information architecture, not the bar, must change.
+    category: components-affordance
+    check_type: deterministic
+    threshold: "3 <= tabs <= 5 on compact width"
+    severity: advise
+    rationale: >-
+      The HIG caps visible tabs so flat navigation stays scannable and each
+      target stays reachable.
+    sources: [apple-hig]
+    tension: ""
+
+  - id: COMP-016
+    statement: >-
+      Ship one opinionated default instead of a preference toggle: new
+      settings/customization options require documented evidence of divergent
+      user need.
+    category: components-affordance
+    check_type: process
+    threshold: "0 new preference toggles without cited user evidence"
+    severity: advise
+    rationale: >-
+      Saarinen: "the best design is opinionated" — flexibility across use
+      cases prevents greatness in any particular one.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  # ---------------------------------------------------------------- motion
+  - id: MOTION-001
+    statement: >-
+      Interaction feedback is immediate: visible response begins within 100ms
+      of input, and feedback animations for presses, toggles, hovers, and
+      control state changes complete within 70-200ms; mutation round-trips
+      target under 500ms and lists over 50 items are virtualized so
+      acknowledgment stays instant.
+    category: motion
+    check_type: deterministic
+    threshold: "first feedback frame <= 100ms after event; control-state animation duration in [70, 200]ms (token range 70-150ms preferred); mutation round-trip < 500ms; lists > 50 items virtualized"
+    severity: block
+    rationale: >-
+      Carbon's fast tokens (70/110ms) and Freiberg's 200ms cap both encode the
+      same law: slower feedback reads as an unresponsive interface. Vercel
+      sets the mutation and virtualization perceived-performance targets
+      (folded in from retired near-duplicate CRAFT-006); Freiberg showed
+      removing motion can make the same action feel faster.
+    sources: [interface-craft, motion-design]
+    tension: ""
+
+  - id: MOTION-002
+    statement: >-
+      Duration ceilings: no user-blocking transition exceeds 400ms in standard
+      productive UI; full-screen or expressive transitions may reach 600ms;
+      background dimming up to 700ms; absolute ceiling 1000ms for non-blocking
+      ambient effects only.
+    category: motion
+    check_type: deterministic
+    threshold: "standard <= 400ms; full-screen <= 600ms; background dimming <= 700ms; hard cap 1000ms; user-blocking animation > 400ms fails"
+    severity: block
+    rationale: >-
+      Material states transitions over 400ms feel too slow; Carbon and M3
+      token scales top out at 700/1000ms for ambient effects only.
+    sources: [motion-design, interface-craft, system-governance]
+    tension: >-
+      interface-craft (Kowalski/Freiberg) caps all UI animation at 300ms and
+      interaction feedback at 200ms; Material/Carbon allow 400-700ms for
+      large or expressive surfaces. The harness blocks above 400ms on
+      user-blocking standard UI and expects the 200-300ms discipline on
+      high-frequency product surfaces.
+
+  - id: MOTION-003
+    statement: >-
+      Easing matches lifecycle and is never linear on spatial movement:
+      entering elements decelerate (ease-out family), exiting elements
+      accelerate (ease-in family), elements visible throughout use a standard
+      in-out curve; linear is permitted only for opacity-only or color-only
+      fades.
+    category: motion
+    check_type: deterministic
+    threshold: "0 linear timing functions on transform/layout-affecting properties; enter = decelerate curve, exit = accelerate curve, on-screen movement = ease-in-out (system curve sets, e.g. Carbon/M3, matched within ~0.1 per control point)"
+    severity: block
+    rationale: >-
+      Disney's slow-in/slow-out is the one principle every system agrees
+      applies universally to UI — unlinear movement reads as artificial.
+    sources: [motion-design, interface-craft, system-governance]
+    tension: ""
+
+  - id: MOTION-004
+    statement: >-
+      Keyboard-initiated actions have zero animation: command palettes,
+      shortcut-triggered navigation, and keybound state changes render
+      instantly.
+    category: motion
+    check_type: deterministic
+    threshold: "0ms transition/animation on keyboard-triggered state changes"
+    severity: block
+    rationale: >-
+      Kowalski: keyboard actions repeated hundreds of times daily feel slow
+      and disconnected when animated.
+    sources: [interface-craft]
+    tension: ""
+
+  - id: MOTION-005
+    statement: >-
+      Animate only compositor-friendly properties (transform, opacity, filter);
+      never animate layout properties (top, left, width, height, margin,
+      padding) except via FLIP-style transform techniques, and never use
+      "transition: all".
+    category: motion
+    check_type: deterministic
+    threshold: "animated properties subset of {transform, opacity, filter}; 0 layout-property animations (FLIP exempt); 0 'transition: all' declarations"
+    severity: block
+    rationale: >-
+      Hardware-accelerated properties keep motion at 60fps; layout-property
+      animation is jank that breaks the physics the easing curve promises.
+    sources: [interface-craft, motion-design]
+    tension: ""
+
+  - id: MOTION-006
+    statement: >-
+      Animations and gestures are interruptible: new input during an animation
+      retargets it immediately, input is never blocked while an animation
+      completes, gesture surfaces track the pointer 1:1 before thresholds fire,
+      and gesture-released animations inherit release velocity (springs or
+      equivalent).
+    category: motion
+    check_type: behavioral
+    threshold: "0 input-blocking animations; mid-animation input visibly retargets; gesture release uses velocity handoff"
+    severity: block
+    rationale: >-
+      Great interactions are modeled after real-world properties like
+      interruptibility (Freiberg); springs are the only animation type
+      maintaining continuity for gesture handoff (Apple WWDC23).
+    sources: [interface-craft, motion-design]
+    tension: ""
+
+  - id: MOTION-007
+    statement: >-
+      Every duration and easing value comes from a declared motion token scale
+      sized to the magnitude of change; no ad-hoc values in component code.
+    category: motion
+    check_type: deterministic
+    threshold: "all durations from a declared set of <= 16 values within 50-1000ms (e.g. Carbon {70,110,150,240,400,700}ms); easing curves <= 8 declared; 0 ad-hoc values"
+    severity: flag
+    rationale: >-
+      All major systems ship motion as tokens because per-component
+      improvisation destroys the consistent sense of speed.
+    sources: [motion-design, system-governance]
+    tension: ""
+
+  - id: MOTION-008
+    statement: >-
+      Duration is proportional: exit/dismiss/collapse animations are shorter
+      than the corresponding enter/expand of the same element, and within one
+      flow an animation covering a larger area or distance is never shorter
+      than one covering a smaller one.
+    category: motion
+    check_type: deterministic
+    threshold: "exit duration < enter duration (reference ratios ~195:225 or ~200:400); duration ordering matches area/distance ordering within the token scale"
+    severity: flag
+    rationale: >-
+      Exits need less attention than the user's next task; Carbon and Material
+      scale duration with the size of the change to keep perceived speed
+      constant.
+    sources: [motion-design]
+    tension: ""
+
+  - id: MOTION-009
+    statement: >-
+      High-frequency surfaces get no entrance animation: context menus,
+      dropdowns, tab switches, typing, scrolling, and routine list-row
+      interactions used many times per session render instantly, with at most
+      a subtle exit fade; if removing an animation makes a frequent flow feel
+      faster, remove it.
+    category: motion
+    check_type: deterministic
+    threshold: "0ms entrance on enumerated high-frequency components; exit <= 150ms; frequent-path interactions have no decorative animation > 150ms"
+    severity: flag
+    rationale: >-
+      Novelty decays into perceived latency on frequent interactions (macOS
+      context menus open with no entrance animation; Apple HIG says avoid
+      motion on frequent interactions).
+    sources: [interface-craft, motion-design]
+    tension: >-
+      Contradicts MOTION-013, which has popovers/dropdowns growing from their
+      trigger (transform-origin at the button, scale-in): a dropdown cannot
+      both grow from its button and render with a 0ms entrance. The
+      contradiction is inherited from interface-craft itself. For gating,
+      this rule's number wins: 0ms dropdown entrance.
+
+  - id: MOTION-010
+    statement: >-
+      Motion is information on calm surfaces: no element animates, blinks, or
+      loops to attract attention unless it signals an ongoing process or a
+      state change requiring action; every animation communicates state,
+      spatial hierarchy, or causality; all other animation is user-triggered
+      and finite.
+    category: motion
+    check_type: deterministic
+    threshold: "0 infinite/attention-seeking animations outside progress and alert states; 0 purely decorative blocking animations"
+    severity: flag
+    rationale: >-
+      Rams refuses design that dominates or excites — signals must inform, not
+      stimulate; the HIG's depth theme uses motion only to convey position and
+      hierarchy.
+    sources: [rams-functionalism, apple-hig]
+    tension: ""
+
+  - id: MOTION-011
+    statement: >-
+      Springs and overshoot are restrained in productive UI: spring bounce
+      <= 0.4 (damping fraction >= ~0.6, default bounce 0), at most one visible
+      overshoot; no bounce, elastic, stretch, or sudden-stop easing curves on
+      task surfaces — overshoot only in designated expressive moments.
+    category: motion
+    check_type: deterministic
+    threshold: "spring bounce in [0, 0.4], default 0; cubic-bezier y control points in [0, 1] for productive contexts; <= 1 visible overshoot"
+    severity: flag
+    rationale: >-
+      Above ~40% bounce feels too exaggerated for UI (Apple WWDC23); Carbon
+      explicitly bans bounce/stretch/sudden-stop on task surfaces.
+    sources: [motion-design]
+    tension: ""
+
+  - id: MOTION-012
+    statement: >-
+      Staging: one focal element per transition — no more than one primary
+      animated group at a time, with secondary elements following via staggered
+      offsets rather than moving simultaneously with equal weight; expressive
+      (slower, dramatic) motion is reserved for at most one significant moment
+      per view.
+    category: motion
+    check_type: vision
+    threshold: "<= 1 primary moving group; secondary stagger 20-50ms per step; <= 1 expressive-class animation (> 400ms or emphasized curve on a large element) per view"
+    severity: flag
+    rationale: >-
+      Disney's staging plus follow-through: competing simultaneous animations
+      confuse; offset establishes hierarchy; Carbon frames expressive motion
+      as a rhythmic break, not a default.
+    sources: [motion-design]
+    tension: ""
+
+  - id: MOTION-013
+    statement: >-
+      Motion originates where it belongs: transform-origin matches the
+      trigger's position, dialogs scale in from ~0.8 (never 0), pressed
+      elements scale to ~0.96-0.9, feedback displays adjacent to its trigger,
+      and new elements appearing mid-flow trace to an existing element or
+      screen edge (or explicitly fade) rather than popping in.
+    category: motion
+    check_type: deterministic
+    threshold: "dialog scale within [0.8, 1]; press scale within [0.9, 1]; transform-origin points at trigger; appearing elements traceable to trigger/edge or fade-in (system interruptions exempt)"
+    severity: flag
+    rationale: >-
+      Motion's job is narrating where objects come from to preserve the mental
+      model of continuity (Freiberg; Willenskomer).
+    sources: [interface-craft, motion-design]
+    tension: >-
+      Contradicts MOTION-009, which gives dropdowns and other high-frequency
+      surfaces a 0ms entrance: an element cannot both grow from its trigger
+      and appear instantly. The contradiction is inherited from
+      interface-craft itself. MOTION-009's 0ms number wins for gating;
+      this rule's origin discipline governs the surfaces that do animate.
+
+  - id: MOTION-014
+    statement: >-
+      Switching color theme triggers no transitions or animations on elements.
+    category: motion
+    check_type: deterministic
+    threshold: "0 animated properties fire on theme toggle"
+    severity: flag
+    rationale: >-
+      Element transitions on theme switch read as a page-wide glitch
+      (Freiberg).
+    sources: [interface-craft]
+    tension: ""
+
+  - id: MOTION-015
+    statement: >-
+      Scale durations per platform: desktop/web 150-200ms baseline for standard
+      transitions, mobile ~300ms, tablet +30% over mobile, wearables -30%
+      under mobile.
+    category: motion
+    check_type: deterministic
+    threshold: "desktop 150-200ms; mobile ~300ms (full-screen up to 375ms); tablet ~ mobile x1.3; wearable ~ mobile x0.7"
+    severity: advise
+    rationale: >-
+      Material's speed guidance scales duration to screen size so perceived
+      speed stays constant across devices.
+    sources: [motion-design]
+    tension: ""
+
+  # ---------------------------------------------------------------- brand-identity
+  - id: BRAND-001
+    statement: >-
+      The brand has a written onliness statement of the form "Our [offering]
+      is the ONLY [category] that [differentiator]" — one sentence, literally
+      using the word "only", with WHAT/HOW/WHO/WHERE/WHY/WHEN slots fillable;
+      "one of the only" fails.
+    category: brand-identity
+    check_type: process
+    threshold: "1 sentence; word 'only' present; 6 slots (what/how/who/where/why/when) fillable"
+    severity: block
+    rationale: >-
+      Neumeier: "if you can't keep it brief and use the word Only, you don't
+      have a zag."
+    sources: [brand-identity]
+    tension: ""
+    applies_to: [identity, project]
+
+  - id: BRAND-002
+    statement: >-
+      Every mark passes all three CGH criteria as explicit checks:
+      (a) appropriate — feeling fits the sector without literally depicting the
+      business; (b) distinctive/memorable — describable in one sentence and
+      doodleable after one exposure; (c) simple — a single visual gesture
+      carrying no more than one idea.
+    category: brand-identity
+    check_type: vision
+    threshold: "3/3 criteria pass; describable in 1 sentence; expresses <= 1 idea"
+    severity: flag
+    rationale: >-
+      Haviv: a great mark must be appropriate, distinctive enough to be
+      remembered, and simple enough to work in every situation — timelessness
+      follows. Downgraded from block in the 2026-07-03 audit: "doodleable
+      after one exposure" has no defined evaluation protocol; this rule
+      blocks again once one is defined.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-003
+    statement: >-
+      The mark is designed and judged in one-color silhouette first and
+      survives flat single-color black-and-white reproduction with identity
+      intact — no gradient, shadow, or color may be load-bearing.
+    category: brand-identity
+    check_type: deterministic
+    threshold: "renders in 1 flat color with identity intact; 0 load-bearing gradients/effects"
+    severity: block
+    rationale: >-
+      Haviv designs in silhouette before color; Rand required one- or
+      two-color reproducibility — a form that needs effects fails somewhere it
+      must live.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-004
+    statement: >-
+      Brand assets are reproduced, never re-drawn: logo aspect ratio unchanged,
+      spec clear space respected, brand colors exact, no recoloring or added
+      effects.
+    category: brand-identity
+    check_type: deterministic
+    threshold: "aspect ratio delta = 0; color Delta-E < 2 from spec; clear space >= spec"
+    severity: block
+    rationale: >-
+      Rand's IBM stewardship established that the identity is the enforced
+      system, not the launch artwork.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-005
+    statement: >-
+      Whole-system consistency: the same action, state, or object is
+      represented identically everywhere in the product (same label, icon,
+      color, and position class) — one program, not a collection of one-offs.
+    category: brand-identity
+    check_type: vision
+    threshold: "0 divergent representations of the same semantic across screens"
+    severity: flag
+    rationale: >-
+      The credited achievement of the Braun program was the unity of one
+      design language across the whole line.
+    sources: [rams-functionalism]
+    tension: ""
+
+  - id: BRAND-006
+    statement: >-
+      Swap test: substitute a direct competitor's name or mark into the
+      artifact (and vice versa); if the result is plausible or looks better,
+      the design is undifferentiated and fails.
+    category: brand-identity
+    check_type: vision
+    threshold: "0 interchangeable brand elements under the swap"
+    severity: flag
+    rationale: >-
+      Neumeier's Brand Gap test: brand elements should never be
+      interchangeable with a competitor's.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-007
+    statement: >-
+      Hand test: occlude the logo/wordmark on the artifact; the brand must
+      still be identifiable from remaining color, typography, voice, and
+      layout.
+    category: brand-identity
+    check_type: vision
+    threshold: "brand identifiable with logo occluded"
+    severity: flag
+    rationale: >-
+      If you cover the logo and can't tell who made the piece, the branding
+      isn't strong enough (Neumeier).
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-008
+    statement: >-
+      The mark remains recognizable at favicon/embroidery scale: rendered at
+      16x16 px, the silhouette still reads as the same mark.
+    category: brand-identity
+    check_type: vision
+    threshold: "recognizable at 16x16 px render"
+    severity: flag
+    rationale: >-
+      Simplicity is defined as working in every situation (Haviv); Rand lists
+      visibility/useability among his effectiveness criteria.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-009
+    statement: >-
+      The mark works as a static form; a mark that is a freeze-frame of an
+      animation and only reads in motion is rejected.
+    category: brand-identity
+    check_type: vision
+    threshold: "static form passes all criteria without animation or motion context"
+    severity: flag
+    rationale: >-
+      Haviv: marks must work in a static form and cannot be a mere freeze
+      frame of an animation.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-010
+    statement: >-
+      A mark identifies rather than describes: it does not attempt to depict
+      what the company does or pack in multiple messages; literal industry
+      depiction demanded by a rationale is rejected.
+    category: brand-identity
+    check_type: vision
+    threshold: "mark expresses <= 1 idea; no literal business depiction required"
+    severity: flag
+    rationale: >-
+      Rand: "a logo doesn't sell (directly), it identifies" — the Mercedes
+      mark has nothing to do with automobiles.
+    sources: [brand-identity]
+    tension: ""
+
+  - id: BRAND-011
+    statement: >-
+      The launch experience goes straight to work: the launch screen is
+      visually identical to the app's first real screen, with no branding-only
+      splash, ad, or forced tutorial before first use.
+    category: brand-identity
+    check_type: vision
+    threshold: "launch placeholder matches first screen's layout skeleton; 0 splash/ad/onboarding gates before the app is usable"
+    severity: flag
+    rationale: >-
+      The HIG explicitly says not to use the launch screen as a branding
+      opportunity — launch should feel instant.
+    sources: [apple-hig]
+    tension: ""
+
+  - id: BRAND-012
+    statement: >-
+      A flexible or generative identity derives every variant from one fixed
+      construction logic (grid, geometry, or rule set) such that all variants
+      are provably members of the same system.
+    category: brand-identity
+    check_type: deterministic
+    threshold: "100% of variants derivable from the stated grid/rule"
+    severity: advise
+    rationale: >-
+      Bierut's MIT Media Lab identity generates all variants from a single
+      7x7 grid — flexibility with a fixed core.
+    sources: [brand-identity]
+    tension: ""
+
+  # ---------------------------------------------------------------- content-information
+  - id: INFO-001
+    statement: >-
+      Deletion/erase test: every element — content or decoration — must change
+      meaning when removed; if hiding it loses no information, affordance, or
+      state, remove it. Every gradient, shadow, line, or illustration on a
+      functional surface must name the function it encodes (state, affordance,
+      grouping, depth-for-focus, or brand identification) or be deleted.
+    category: content-information
+    check_type: vision
+    threshold: "0 elements failing the omission test (cover it; does meaning or capability change?); 0 decorative elements with no nameable function"
+    severity: flag
+    rationale: >-
+      Rams' central principle is to omit the unimportant to emphasize the
+      important; Tufte's data-ink ratio makes the same cut mechanical for
+      charts. Downgraded from block in the 2026-07-03 audit: per-element
+      deletion judgment is contested with no evaluation protocol defined;
+      this rule blocks again once one exists.
+    sources: [rams-functionalism, information-design]
+    tension: ""
+
+  - id: INFO-002
+    statement: >-
+      Graphical integrity: the visual size of an effect is proportional to the
+      numeric size (lie factor within 0.95-1.05); bar and area charts use
+      zero-baseline value axes.
+    category: content-information
+    check_type: deterministic
+    threshold: "(graphic effect % / data effect %) in [0.95, 1.05]; bar/area chart value axis min = 0"
+    severity: block
+    rationale: >-
+      Tufte: representation of numbers must be directly proportional to the
+      quantities represented.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: INFO-003
+    statement: >-
+      No 3D effects, perspective, or depth rendering on 2D data (3D bars, 3D
+      pies, extruded surfaces when data has at most two quantitative
+      dimensions).
+    category: content-information
+    check_type: deterministic
+    threshold: "0 perspective-distorted or occluding marks for <= 2-dimensional data"
+    severity: block
+    rationale: >-
+      3D rendering distorts encoded magnitudes and occludes data (Tufte lie
+      factor; Few's mistake #7).
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: INFO-004
+    statement: >-
+      Labels are a last resort: no "Label: value" pair where the format is
+      self-evident (email, phone, price, date) or where label and value merge
+      into a phrase; where users scan by label (spec sheets), labels stay and
+      get the darker emphasis with the value lighter.
+    category: content-information
+    check_type: vision
+    threshold: "per label: deletable without ambiguity -> delete; mergeable into value -> merge; kept only with a scanning rationale"
+    severity: flag
+    rationale: >-
+      The data's format or a combined phrase usually communicates the meaning;
+      explicit labels are kept only for label-scanning contexts.
+    sources: [refactoring-ui]
+    tension: ""
+
+  # INFO-005 retired 2026-07-03: merged into COMP-003 (designed empty states).
+  # ID permanently retired — never reuse.
+
+  - id: INFO-006
+    statement: >-
+      No naked numbers: every KPI/metric displays at least one comparison —
+      target, prior period, or trend (bullet graph, sparkline, delta).
+    category: content-information
+    check_type: deterministic
+    threshold: "each metric tile has >= 1 of {target marker, % change vs reference, trend line}"
+    severity: flag
+    rationale: >-
+      A measure without context cannot be evaluated at a glance (Few's
+      mistake #2).
+    sources: [information-design]
+    tension: ""
+    applies_to: [dashboard]
+
+  - id: INFO-007
+    statement: >-
+      Direct labeling over legends: label series at the mark when series count
+      is small; when a legend is unavoidable, its order matches the visual
+      order of the series.
+    category: content-information
+    check_type: deterministic
+    threshold: "series <= 7 -> label adjacent to mark; legend order = end-value order"
+    severity: flag
+    rationale: >-
+      Explanatory words belong as close to the data as possible; legends force
+      eye travel and working-memory mapping.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: INFO-008
+    statement: >-
+      Pie/donut charts only for a single part-to-whole message with <= 5
+      slices; any slice-to-slice magnitude comparison uses a bar chart
+      instead.
+    category: content-information
+    check_type: deterministic
+    threshold: "pie implies slices <= 5 AND message is part-to-whole; near-equal slice comparison implies bar chart"
+    severity: flag
+    rationale: >-
+      Few: pies are by far the least effective for comparison — only quarter
+      fractions are discernible by angle.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: INFO-009
+    statement: >-
+      Encoding follows the perception hierarchy: primary quantitative
+      comparisons use position or length; angle (pie), area (bubble), and
+      color saturation only when position/length are already consumed by other
+      variables.
+    category: content-information
+    check_type: vision
+    threshold: "principal comparison encoded as position/length; documented justification for angle/area/color encodings"
+    severity: flag
+    rationale: >-
+      Cleveland & McGill measured position judgments ~1.4-2.5x more accurate
+      than length and ~2x more accurate than angle.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: INFO-010
+    statement: >-
+      State survives navigation: the URL reflects app state (filters, tabs,
+      pagination, expanded panels are deep-linkable) and Back/Forward restores
+      prior scroll position.
+    category: content-information
+    check_type: deterministic
+    threshold: "shareable URL reproduces the view; scroll restored on history navigation"
+    severity: flag
+    rationale: >-
+      URL-reflected state and scroll restoration keep navigation
+      non-destructive (Vercel Web Interface Guidelines).
+    sources: [interface-craft]
+    tension: ""
+
+  - id: INFO-011
+    statement: >-
+      Glanceable precision: dashboard-level numbers rounded to 2-3 significant
+      digits with unit abbreviation ($3.85M, not $3,848,305.93); full
+      precision on demand only.
+    category: content-information
+    check_type: deterministic
+    threshold: "significant digits <= 3 on KPI/summary numbers"
+    severity: advise
+    rationale: >-
+      Excessive precision slows glance reading without adding monitoring
+      value (Few's mistake #3).
+    sources: [information-design]
+    tension: ""
+    applies_to: [dashboard]
+
+  - id: INFO-012
+    statement: >-
+      Inline/in-table trends use sparklines: word-sized, axis-free lines with
+      at most min/max/last-point markers — never full-chrome mini-charts
+      inside cells.
+    category: content-information
+    check_type: deterministic
+    threshold: "inline chart height <= 1.5x line-height; 0 axis lines, tick labels, or legends inside cells"
+    severity: advise
+    rationale: >-
+      Sparklines have a data-ink ratio of 1.0 — entirely data, no non-data
+      (Tufte).
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  # ---------------------------------------------------------------- accessibility
+  - id: A11Y-001
+    statement: >-
+      Text contrast against its background is at least 4.5:1 for normal text
+      and 3:1 for large text, measured at the worst case over translucent or
+      image backgrounds; when white-on-brand-color fails, flip the contrast to
+      dark same-hue text on a light shade rather than shipping the failing
+      pair.
+    category: accessibility
+    check_type: deterministic
+    threshold: ">= 4.5:1 normal text; >= 3:1 large text (>= 18pt/24px regular or >= 14pt/18.66px bold), WCAG formula; failing white-on-color pairs replaced by dark-on-light same-hue"
+    severity: block
+    rationale: >-
+      WCAG 2.2 AA SC 1.4.3 is the legibility floor adopted by Apple, GOV.UK,
+      Material, and Refactoring UI alike.
+    sources: [critique-process, apple-hig, refactoring-ui, system-governance]
+    tension: ""
+
+  - id: A11Y-002
+    statement: >-
+      UI component boundaries/states and meaningful graphical objects have at
+      least 3:1 contrast against adjacent colors.
+    category: accessibility
+    check_type: deterministic
+    threshold: ">= 3:1 against adjacent color(s) for controls, states, and information-bearing graphics"
+    severity: block
+    rationale: >-
+      WCAG 2.2 AA SC 1.4.11 requires controls and meaningful graphics to be
+      perceivable, not just text.
+    sources: [critique-process]
+    tension: ""
+
+  - id: A11Y-003
+    statement: >-
+      Hit targets meet platform floors regardless of visible glyph size: at
+      least 44x44 pt/px on touch (48x48dp where Material is the declared
+      system, 60x60 pt on visionOS) and at least 24x24 CSS px on pointer
+      devices, with spacing between adjacent targets and no dead zones between
+      interactive list items (label and control share one hit target).
+    category: accessibility
+    check_type: deterministic
+    threshold: "touch >= 44x44 pt (Material systems 48x48dp; visionOS 60x60pt); pointer >= 24x24 CSS px (WCAG 2.5.8 spacing exception allowed); >= 8dp between adjacent targets; 0 dead zones in interactive lists"
+    severity: block
+    rationale: >-
+      44pt is the finger-sized floor (Apple/Freiberg), 48dp Material's, and
+      24px WCAG 2.2's legal minimum — the harness enforces the platform's
+      declared floor, never below WCAG.
+    sources: [interface-craft, apple-hig, system-governance, critique-process]
+    tension: ""
+
+  - id: A11Y-004
+    statement: >-
+      Keyboard focus is always visible and never fully obscured: every
+      interactive element shows a visible :focus-visible indicator drawn from
+      shared design tokens (no bare outline:none, no custom one-off rings),
+      following the element's border radius, and never entirely hidden by
+      sticky headers or overlays.
+    category: accessibility
+    check_type: deterministic
+    threshold: "0 focusable elements without a visible :focus-visible style; 0 outline:none without replacement; 0 custom focus-ring overrides bypassing tokens; indicator >= 2 CSS px perimeter with >= 3:1 focused-vs-unfocused contrast; never fully obscured"
+    severity: block
+    rationale: >-
+      WCAG 2.2 SC 2.4.7/2.4.11 plus Vercel's token-provenance lint: focus
+      must be visible, consistent, and unobscured.
+    sources: [interface-craft, critique-process, saas-quality-culture]
+    tension: ""
+
+  - id: A11Y-005
+    statement: >-
+      Full keyboard support: every flow is completable by keyboard — Enter
+      submits a focused input (Cmd/Ctrl+Enter in textareas), sequential lists
+      navigate with arrow keys, composite widgets follow WAI-ARIA APG
+      patterns, and modals trap then return focus.
+    category: accessibility
+    check_type: deterministic
+    threshold: "100% of flows completable by keyboard; APG conformance for menus/dialogs/lists; modal focus trapped and returned"
+    severity: block
+    rationale: >-
+      Freiberg and Vercel treat form-Enter submission, arrow-key navigation,
+      and APG-conformant focus management as baseline correctness.
+    sources: [interface-craft]
+    tension: ""
+
+  - id: A11Y-006
+    statement: >-
+      Content reflows at 320 CSS px viewport width (~400% zoom) with no
+      two-dimensional scrolling for text content.
+    category: accessibility
+    check_type: deterministic
+    threshold: "no horizontal scroll at 320 CSS px width (256 px height for horizontally scrolled content)"
+    severity: block
+    rationale: >-
+      WCAG 2.2 AA SC 1.4.10 guarantees magnification users never scroll in
+      two dimensions to read a line.
+    sources: [critique-process]
+    tension: ""
+
+  - id: A11Y-007
+    statement: >-
+      Layout survives user text adjustments: text resizes to 200% (and scales
+      with the platform text-size setting / Dynamic Type) without loss of
+      content or function, and survives WCAG text-spacing overrides with no
+      clipping or overlap.
+    category: accessibility
+    check_type: deterministic
+    threshold: "layout intact at 200% text scale, 0 clipped/overlapping strings; survives 1.5x line-height, 2x paragraph, 0.12x letter, 0.16x word spacing overrides; 0 px-fixed body text"
+    severity: block
+    rationale: >-
+      WCAG 2.2 SC 1.4.4/1.4.12 and Apple's Dynamic Type make user-controlled
+      legibility a baseline expectation.
+    sources: [critique-process, apple-hig]
+    tension: ""
+
+  - id: A11Y-008
+    statement: >-
+      Neither color nor motion is ever the sole carrier of information: every
+      color-encoded meaning (state, error, link, chart series) has a redundant
+      non-color cue verifiable in grayscale; red/green is never the only
+      distinction between series or statuses; any state communicated by
+      animation also persists in a static visual after the animation ends.
+    category: accessibility
+    check_type: vision
+    threshold: "grayscale render preserves all encoded distinctions; 0 red/green-only distinctions (deuteranopia-sim distinguishable or redundant channel)"
+    severity: block
+    rationale: >-
+      WCAG SC 1.4.1 plus Few's red/green rule and Apple's requirement that
+      motion be optional — second channels are mandatory.
+    sources: [critique-process, information-design, motion-design]
+    tension: >-
+      The original threshold clause "state legible from a static screenshot
+      after animation completes" is a runtime requirement: verifying that a
+      state persists once an animation ends needs interaction, i.e. a
+      behavioral check no engine runs yet. The requirement still stands (it
+      remains in the statement); vision review covers the static channels
+      until a behavioral engine exists.
+
+  - id: A11Y-009
+    statement: >-
+      prefers-reduced-motion (or the platform equivalent) is honored: every
+      animation involving scaling, spinning, parallax, depth/blur simulation,
+      or peripheral movement has a reduced variant (opacity fade) or is
+      disabled entirely.
+    category: accessibility
+    check_type: deterministic
+    threshold: "100% of transform-based animations gated or replaced under the reduced-motion query; parallax and autoplay effects disabled under it"
+    severity: block
+    rationale: >-
+      Animations can make people feel sick; Apple, Material, and Vercel all
+      mark reduced-motion support as MUST.
+    sources: [interface-craft, motion-design, apple-hig]
+    tension: ""
+
+  - id: A11Y-010
+    statement: >-
+      Motion safety: nothing on screen flashes more than 3 times in any
+      one-second period, and auto-playing or looping motion lasting longer
+      than 5 seconds has a visible pause/stop/hide control.
+    category: accessibility
+    check_type: deterministic
+    threshold: "flash frequency <= 3 per second; autoplay animation > 5s implies visible pause/stop/hide control"
+    severity: block
+    rationale: >-
+      WCAG 2.3.1 is a seizure-safety gate and WCAG 2.2.2 treats uncontrollable
+      moving content as a failure.
+    sources: [motion-design]
+    tension: ""
+
+  - id: A11Y-011
+    statement: >-
+      Every icon-only button has an accessible name.
+    category: accessibility
+    check_type: deterministic
+    threshold: "100% of icon-only buttons carry an accessible name (aria-label or equivalent)"
+    severity: block
+    rationale: >-
+      Vercel's linters reject unnamed icon buttons — an unlabeled control is
+      invisible to assistive tech.
+    sources: [saas-quality-culture]
+    tension: ""
+
+  - id: A11Y-012
+    statement: >-
+      Before publication a component passes a defined compatibility matrix —
+      tested across supported browsers, assistive technologies (screen reader
+      at minimum), and device classes — with results recorded.
+    category: accessibility
+    check_type: process
+    threshold: "100% of the published support matrix tested and logged"
+    severity: block
+    rationale: >-
+      GOV.UK's "versatile" criterion requires components be shown to work
+      with a range of browsers, assistive technologies, and devices.
+    sources: [system-governance]
+    tension: ""
+    applies_to: [project]
+
+  - id: A11Y-013
+    statement: >-
+      Every drag interaction has a single-pointer, non-drag alternative (e.g.
+      click/tap to move) unless dragging is essential.
+    category: accessibility
+    check_type: deterministic
+    threshold: "100% of drag operations have a non-drag path"
+    severity: flag
+    rationale: >-
+      WCAG 2.2 AA SC 2.5.7 protects users with limited fine-motor control
+      from drag-only functionality.
+    sources: [critique-process]
+    tension: ""
+
+  - id: A11Y-014
+    statement: >-
+      Every content image carries alternative text; purely decorative images are
+      explicitly marked as such (empty alt or presentation role), never left bare.
+    category: accessibility
+    check_type: deterministic
+    threshold: "0 content images without alt text; decorative images alt=\"\" or role=presentation"
+    severity: block
+    rationale: >-
+      WCAG 2.2 A SC 1.1.1 — non-text content requires a text alternative; added
+      in the 2026-07-03 audit pass, which found no school had contributed it.
+    sources: [critique-process]
+    tension: ""
+
+  # ---------------------------------------------------------------- craft-detail
+  - id: CRAFT-001
+    statement: >-
+      No moire-inducing patterns, cross-hatching, or heavy pattern fills; no
+      background images or gradients behind the plot area of a chart.
+    category: craft-detail
+    check_type: deterministic
+    threshold: "0 patterned fills or background imagery inside the plot area"
+    severity: block
+    rationale: >-
+      Tufte names vibrating patterns and decorative backgrounds as canonical
+      chartjunk that actively interferes with reading.
+    sources: [information-design]
+    tension: ""
+    applies_to: [chart, dashboard]
+
+  - id: CRAFT-002
+    statement: >-
+      Shadows come from a fixed elevation system (~5 predefined levels), each
+      built from two parts — a larger soft shadow with a positive vertical
+      offset plus a tighter darker ambient shadow — never invented ad hoc per
+      component, never offset upward; inset shadows for elements that sit in
+      the page.
+    category: craft-detail
+    check_type: deterministic
+    threshold: "all box-shadows from <= 5 declared elevation tokens; every drop shadow offset-y > 0; modal >= card >= button in elevation"
+    severity: flag
+    rationale: >-
+      A small fixed shadow scale mapped to elevation meaning simulates one
+      overhead light source and keeps depth semantic.
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: CRAFT-003
+    statement: >-
+      Borders are the last separator tried: adjacent regions are distinguished
+      by spacing, a background-color difference, or a subtle shadow first; a
+      1px border appears only where none of those suffices, and no element
+      wears a border plus a shadow doing the same separation job.
+    category: craft-detail
+    check_type: vision
+    threshold: "per separation: space (>= 16px), background delta, or shadow considered first; borders only where alternatives fail (dense tables OK); 0 doubled separators"
+    severity: flag
+    rationale: >-
+      Too many borders make designs busy; space and background shifts separate
+      more quietly (Refactoring UI).
+    sources: [refactoring-ui]
+    tension: ""
+
+  - id: CRAFT-004
+    statement: >-
+      Typographic characters and spaces are real and single: curly quotes and
+      correct apostrophes, true ellipsis character, hyphen/en-dash/em-dash
+      used distinctly (no "--"), proper symbols with nonbreaking spaces; one
+      space between sentences; no runs of white-space characters used for
+      alignment; justified word spaces average about a quarter em.
+    category: craft-detail
+    check_type: deterministic
+    threshold: "0 straight quotes as quotation marks; 0 '...' three-period ellipses; 0 '--' sequences; 0 double sentence spaces or runs of >= 2 spaces; justified word-space average 0.20-0.33em"
+    severity: flag
+    rationale: >-
+      Butterick treats typewriter substitutes as the clearest marker of
+      amateur setting; Vercel's guidelines require the true ellipsis.
+    sources: [typography-canon, interface-craft]
+    tension: ""
+
+  - id: CRAFT-005
+    statement: >-
+      Component styling flows through the design system: className/overrides
+      never change a system component's color or radius, and raw shadows are
+      replaced with theme-aware tokens.
+    category: craft-detail
+    check_type: deterministic
+    threshold: "0 overrides of system-component color/radius; 0 off-token raw shadows"
+    severity: flag
+    rationale: >-
+      One-off overrides silently fork the system and rot consistency (Vercel
+      design linters).
+    sources: [saas-quality-culture]
+    tension: ""
+
+  # CRAFT-006 retired 2026-07-03: merged into MOTION-001 (100ms input acknowledgment).
+  # ID permanently retired — never reuse.
+
+  # ---------------------------------------------------------------- process-workflow
+  - id: PROC-001
+    statement: >-
+      Nothing ships to customers before it passes the internal quality bar;
+      rough work is fine internally (dogfood/beta), never publicly — the
+      process log shows an explicit pre-release quality review with a
+      pass/fail outcome before public exposure.
+    category: process-workflow
+    check_type: process
+    threshold: "quality-bar review recorded before any public release; 0 exceptions"
+    severity: block
+    rationale: >-
+      Linear iterates from rough, but treats public exposure of below-bar
+      work as the one unforgivable move (Saarinen).
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-002
+    statement: >-
+      Never claim visual verification from code inspection alone: every design
+      change is verified against the rendered surface (screenshot or live
+      walkthrough) before sign-off.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 1 screenshot/recording of the real rendered surface attached to review"
+    severity: block
+    rationale: >-
+      Agents and humans systematically over-claim from code reading; Vercel's
+      "verify the real surface" principle exists for this.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-003
+    statement: >-
+      Semantic-syntactic-pragmatic gate: sign-off requires (1) a written
+      semantic brief (meaning, subject, audience), (2) the syntactic system
+      spec (grid + type + color), and (3) a passed pragmatic test — an
+      uninvolved person states what the artifact says/does with no
+      explanation given.
+    category: process-workflow
+    check_type: process
+    threshold: "all 3 documents present; unaided fresh-reader comprehension >= 80% of intended message"
+    severity: block
+    rationale: >-
+      The Vignelli Canon's core test: semantically correct, syntactically
+      consistent, understood at the point of fruition.
+    sources: [swiss-grid]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-004
+    statement: >-
+      Structure precedes layout: a written grid spec (columns, modules,
+      gutters, margins, baseline unit, in real units) and a canvas format
+      drawn from a declared proportion system exist and are logged before the
+      first layout; undocumented eyeballed layout fails.
+    category: process-workflow
+    check_type: process
+    threshold: "1 written grid spec + declared format series predating first layout"
+    severity: block
+    rationale: >-
+      Muller-Brockmann constructs the grid first so placement is systematic;
+      Vignelli shows arbitrary formats lead to chaos.
+    sources: [swiss-grid]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-005
+    statement: >-
+      Read-then-set gate: before any type is chosen, a one-paragraph statement
+      of the text, its readers, and its goals exists; every typographic choice
+      cites a goal it serves; body text is specified and approved before any
+      heading/display styling exists.
+    category: process-workflow
+    check_type: process
+    threshold: "1 text-goals brief predating type choices; body spec (size, leading, measure, face) approved before heading styles"
+    severity: block
+    rationale: >-
+      Bringhurst's first instruction is to read the text before designing it;
+      otherwise good typography is luck (Butterick).
+    sources: [typography-canon]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-006
+    statement: >-
+      Critique sessions are structured: the session opens with the stated
+      problem/goal before the artifact is shown; the session is declared as
+      either critique (improve) or review (ship gate) before it starts, with
+      no ship/no-ship verdicts inside a critique; clarifying questions form a
+      separate phase that closes before any evaluative feedback.
+    category: process-workflow
+    check_type: process
+    threshold: "problem statement recorded before first feedback item; session type in {critique, review} with no ship verdict in critique logs; question phase precedes feedback phase"
+    severity: block
+    rationale: >-
+      Spool separates "what are we trying to do" from "does this accomplish
+      it"; critique and review are different conversations; Figma sequences
+      context, questions, then feedback.
+    sources: [critique-process]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-007
+    statement: >-
+      Feedback diagnoses and advises, never mandates: each note states what is
+      wrong, missing, unclear, or nonsensical (proposed fixes labeled
+      illustration only), and the maker records a disposition (accept / adapt
+      / decline + reason) for every note — no reviewer's note is auto-binding.
+    category: process-workflow
+    check_type: process
+    threshold: "each note contains >= 1 of {wrong, missing, unclear, makes-no-sense}; 100% of notes carry a maker-recorded disposition; 0 notes marked required by a non-owner"
+    severity: block
+    rationale: >-
+      Catmull's good-note definition plus the Braintrust's no-authority rule:
+      the director decides, which is what keeps candor safe.
+    sources: [critique-process]
+    tension: ""
+    applies_to: [org]
+
+  # PROC-008 retired 2026-07-03: merged into COMP-011 (no duplicated primitives).
+  # ID permanently retired — never reuse.
+
+  - id: PROC-009
+    statement: >-
+      Nothing ships as stable without usability evidence from a representative
+      sample of users including disabled users; until that evidence exists the
+      item carries an explicit "experimental" label in its documentation.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 1 documented usability study including users with disabilities; unproven items labeled experimental"
+    severity: block
+    rationale: >-
+      GOV.UK's "usable" publication criterion requires testing with
+      representative users including those with disabilities.
+    sources: [system-governance]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-010
+    statement: >-
+      Deprecation follows the contract: mark deprecated in docs, emit a
+      runtime warning, and publish a before/after migration guide in major
+      version N; keep the asset through at least N+1; majors at least 12
+      months apart with a migration window of at least 3 months.
+    category: process-workflow
+    check_type: process
+    threshold: "warn in N, remove no earlier than N+1; majors >= 12 months apart; migration guide exists before removal"
+    severity: block
+    rationale: >-
+      Carbon and Polaris both treat deprecation as a published contract, not
+      a surprise.
+    sources: [system-governance]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-011
+    statement: >-
+      Never present a logo floating alone on a blank slide: every candidate is
+      shown in at least 3 realistic applications (website header, signage,
+      small-scale/merch) before any approval decision.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 3 in-context applications per candidate"
+    severity: block
+    rationale: >-
+      Haviv's Armani A/X lesson — the identical mark rejected in isolation was
+      approved when shown in context; Rand's booklets always showed
+      application.
+    sources: [brand-identity]
+    tension: ""
+    applies_to: [identity]
+
+  - id: PROC-012
+    statement: >-
+      Decide on artifacts, not descriptions: no design direction is approved
+      from a verbal pitch, static description, or lorem-ipsum mock alone — a
+      working prototype, model, or true-to-size render with real content
+      exists before the decision, and engineering handoff artifacts carry
+      final type, spacing, color, and real strings.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 1 prototype/model or real-content full-size render per candidate direction at each decision gate; 0 placeholder content at handoff"
+    severity: flag
+    rationale: >-
+      Rams clarified everything with models because change costs more later;
+      Ive: a crude model "brings form to a nebulous idea and everything
+      changes"; Lopp: pixel-perfect mocks remove all ambiguity.
+    sources: [rams-functionalism, apple-hig]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-013
+    statement: >-
+      10-to-3-to-1: for any new feature or screen, produce ~10 genuinely
+      divergent directions with no constraint on ambition, develop 3 further,
+      and only then converge on 1; convergence without documented alternatives
+      is a process defect.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 10 divergent initial directions -> 3 developed -> 1 shipped; discarded directions archived"
+    severity: flag
+    rationale: >-
+      Apple's designers reliably compared ten real alternatives before
+      committing (Lopp, SXSW 2008).
+    sources: [apple-hig]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-014
+    statement: >-
+      Default answer is no: every proposed feature or element states what core
+      task it serves and what it displaces; anything unjustifiable against the
+      product's primary purpose is cut, and the cut list is kept per release.
+    category: process-workflow
+    check_type: process
+    threshold: "100% of accepted additions carry a core-task justification; written cut list exists per release"
+    severity: flag
+    rationale: >-
+      Jobs defined innovation as saying no to 1,000 things; Ive practiced
+      focus as a minute-by-minute discipline.
+    sources: [apple-hig]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-015
+    statement: >-
+      Every design-review finding cites evidence, not taste: location, the
+      canonical guideline violated, the concrete user consequence, and a
+      proposed fix — prioritized P0 (blocks task / severe a11y) through P3
+      (minor craft).
+    category: process-workflow
+    check_type: process
+    threshold: "4 fields per finding (location, source, consequence, fix) + P0-P3 priority"
+    severity: flag
+    rationale: >-
+      Evidence-based findings are actionable and prevent preference wars
+      (Vercel review format).
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-016
+    statement: >-
+      Quality review assesses all three levels in order — utility (solves the
+      problem), usability (value easy to reach), beauty (execution refined and
+      enjoyable) — and records a verdict for each; "utility first" never
+      waives the beauty pass.
+    category: process-workflow
+    check_type: process
+    threshold: "3 explicit verdicts (utility/usability/beauty) per review, none skipped"
+    severity: flag
+    rationale: >-
+      Dill's framework insists all three must be got right and names the
+      deferred-beauty backlog as a failure mode.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-017
+    statement: >-
+      Walk the product: before shipping a flow, the author walks it end-to-end
+      as a real user and files a friction log with every item triaged into a
+      bug or feature request; the product's most important journeys (top ~15)
+      are enumerated and re-walked on a fixed cadence with leadership present,
+      each scored on a coarse 5-point scale tracked over time.
+    category: process-workflow
+    check_type: process
+    threshold: "1 friction log per shipped flow with 100% of items triaged; ~15 essential journeys re-walked quarterly with 5-point scores logged"
+    severity: flag
+    rationale: >-
+      Stripe trains everyone on friction logging and runs the Essential
+      Journeys "walk the store" program with coarse scores to avoid false
+      precision.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-018
+    statement: >-
+      Known quality bugs do not age: a reported defect in a shipped surface is
+      fixed, or explicitly rejected with rationale, within 7 days.
+    category: process-workflow
+    check_type: process
+    threshold: "<= 7 days from report to fix or explicit decline"
+    severity: flag
+    rationale: >-
+      Linear's zero-bugs policy refuses to let tolerated defects recalibrate
+      the team's standard downward.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-019
+    statement: >-
+      When time pressure hits, cut scope, never polish: the descope list may
+      name features and surfaces, never craft items (states, accessibility,
+      detail passes).
+    category: process-workflow
+    check_type: process
+    threshold: "0 quality/craft items on the descope list"
+    severity: flag
+    rationale: >-
+      The simplest way to increase quality is to reduce scope — quality is
+      held constant while scope flexes (Saarinen).
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-020
+    statement: >-
+      Token and pattern rules run as automated lint in CI on every pull
+      request; violations block merge rather than waiting for human review.
+    category: process-workflow
+    check_type: process
+    threshold: "lint suite required in CI; 0 token violations at merge"
+    severity: flag
+    rationale: >-
+      Carbon and Atlassian ship official lint plugins so token discipline is
+      enforced by machines, not reviewer vigilance.
+    sources: [system-governance]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-021
+    statement: >-
+      Design-token files exchanged between tools are valid DTCG JSON: every
+      token has $value; $type set explicitly or inherited; aliases use
+      {group.token} syntax and resolve without cycles.
+    category: process-workflow
+    check_type: deterministic
+    threshold: "100% of tokens with resolvable $value; 0 unresolved or circular aliases"
+    severity: flag
+    rationale: >-
+      The W3C DTCG Format Module defines the vendor-neutral contract that
+      keeps tokens portable across tools.
+    sources: [system-governance]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-022
+    statement: >-
+      Feedback hygiene: feedback is phrased about the artifact in I-statements
+      (never second-person fault-finding); each participant's round includes
+      at least one appreciative and one critical item; the presenter declares
+      up front what feedback is wanted and what is out of scope; notes count
+      only from reviewers who attended with full context — out-of-band vetoes
+      are escalations, not notes.
+    category: process-workflow
+    check_type: process
+    threshold: "0 person-directed feedback items; per participant >= 1 like AND >= 1 wish/what-if; 'feedback wanted'/'not wanted' fields recorded before feedback; every logged note maps to a session participant"
+    severity: flag
+    rationale: >-
+      d.school I-statements, Spool's balanced themes, Figma's scoped-feedback
+      format, and the anti-swoop-and-poop norm all protect signal quality.
+    sources: [critique-process]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-023
+    statement: >-
+      Identity candidates are presented finished and cleared: only fully
+      tested, shippable candidates (1-3, or a single solution with full
+      reasoning) — never sketches or WIP; each accompanied by a written
+      rationale (problem, reasoning, construction, usage rules), scored
+      against the declared criteria checklist (CGH 3 or Rand's 7), and cleared
+      by a preliminary trademark/distinctiveness search before showing.
+    category: process-workflow
+    check_type: process
+    threshold: "1-3 candidates, each shippable; 0 WIP exposed; rationale document covering problem/construction/usage; criteria scored per candidate; 0 candidates presented without a similarity search"
+    severity: flag
+    rationale: >-
+      CGH shows only shippable candidates cleared legally; Rand presented one
+      reasoned booklet — the argument, not theatrics, sells the mark.
+    sources: [brand-identity]
+    tension: ""
+    applies_to: [identity]
+
+  - id: PROC-024
+    statement: >-
+      Identity decisions are made by the decision-maker against criteria:
+      work is not presented without the final decision-maker present; feedback
+      is collected against stated criteria rather than like/dislike votes;
+      logo aesthetics are never put to a focus group; first-encounter dislike
+      is not grounds for rejection — every objection names which criterion
+      fails.
+    category: process-workflow
+    check_type: process
+    threshold: "decision-maker present; 0 focus-group aesthetic votes; 100% of objections mapped to a named criterion"
+    severity: flag
+    rationale: >-
+      Haviv requires CEO access and opens with "it's never love at first
+      sight"; Neumeier prefers field tests and 1:1 interviews over focus
+      groups.
+    sources: [brand-identity]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-025
+    statement: >-
+      Justify by function, not fashion: every reviewed design decision is
+      recorded with a functional rationale ("it's the current trend" is
+      inadmissible), and when two candidates are functionally equal, the one
+      with fewer distinct styles, components, and payload wins the tie.
+    category: process-workflow
+    check_type: process
+    threshold: "100% of logged decisions carry a function/user rationale; 0 trend-only rationales; fewer-parts variant wins recorded ties"
+    severity: advise
+    rationale: >-
+      Rams condemns modish sensation that outdates products, and good design
+      uses as little design as possible.
+    sources: [rams-functionalism]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-026
+    statement: >-
+      First-pass design for each new screen or feature is done in grayscale:
+      hierarchy must work through spacing, size, weight, and gray contrast
+      alone before any chromatic color is applied.
+    category: process-workflow
+    check_type: process
+    threshold: "process log shows a grayscale iteration preceding the colored one per new screen/feature"
+    severity: advise
+    rationale: >-
+      Grayscale-first forces reliance on fundamental hierarchy tools so color
+      enhances a working structure instead of propping up a broken one.
+    sources: [refactoring-ui]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-027
+    statement: >-
+      The spec is the floor, not the target: final review identifies at least
+      one refinement added beyond the written spec during building; shipping
+      exactly-the-spec with zero discovered improvements signals handoff
+      thinking.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 1 documented beyond-spec refinement per project"
+    severity: advise
+    rationale: >-
+      Saarinen: consider the spec your baseline minimum viable product, not
+      your goal.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [project]
+
+  - id: PROC-028
+    statement: >-
+      Design-quality decisions are not decided by A/B tests or metric deltas
+      alone: recorded rationale is judgment/craft-based, validated by
+      dogfooding and a small cohort of 5-10 motivated users before broad
+      rollout.
+    category: process-workflow
+    check_type: process
+    threshold: "cohorts of 5-10 users pre-expansion; rationale not a metric delta alone"
+    severity: advise
+    rationale: >-
+      Saarinen: data can be a crutch — Linear's quality gate was invited users
+      retained daily, not dashboards.
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-029
+    statement: >-
+      Project teams stay small — 1-5 people working intensively, no permanent
+      single-feature teams; if a project needs more people, split the project.
+    category: process-workflow
+    check_type: process
+    threshold: "<= 5 people per project team"
+    severity: advise
+    rationale: >-
+      More people introduce more deliberation, which dilutes execution
+      quality (Saarinen).
+    sources: [saas-quality-culture]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-030
+    statement: >-
+      Paired meetings, never merged: a recurring brainstorm meeting (no
+      constraints allowed in the room) and a separate recurring production
+      meeting (everything nailed down with engineering), both running through
+      the whole development cycle.
+    category: process-workflow
+    check_type: process
+    threshold: "2 distinct recurring reviews per team; brainstorm continues past spec-freeze"
+    severity: advise
+    rationale: >-
+      Apple's paired design meetings kept free thinking and feasibility rigor
+      from contaminating each other.
+    sources: [apple-hig]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-031
+    statement: >-
+      Governance decisions are public and scheduled: a cross-functional
+      working group reviews proposals at a fixed cadence with proposals
+      circulated ahead, and every decision is recorded on an open backlog.
+    category: process-workflow
+    check_type: process
+    threshold: "fixed review cadence (e.g. monthly, circulated 1 week ahead); decisions logged publicly"
+    severity: advise
+    rationale: >-
+      GOV.UK routes every proposal through a monthly working-group review
+      logged on the public community backlog.
+    sources: [system-governance]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-032
+    statement: >-
+      Critique etiquette and cadence: work is critiqued early (first critique
+      at low fidelity, before polish) and on a standing cadence; sessions are
+      timeboxed (at most 2 topics per hour, 20-30 minutes per topic); the
+      presenter listens without rebutting during the feedback round;
+      exploration-tagged work gets defer-judgment brainstorm treatment, not
+      polish critique.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 1 critique logged before high-fidelity mockups; recurring cadence; <= 2 topics per 60 min; 0 presenter rebuttals inside the feedback phase; exploration work routed to jam/workshop format"
+    severity: advise
+    rationale: >-
+      Catmull: notes must be timely enough to act on; Figma found crits
+      degrade past two topics an hour; judging during divergence kills idea
+      flow (IDEO).
+    sources: [critique-process]
+    tension: ""
+    applies_to: [org]
+
+  - id: PROC-033
+    statement: >-
+      Validate identity prototypes in the field, not the meeting room: mock
+      the real context (shelf, feed, storefront) and test with real audience
+      members one-on-one before launch.
+    category: process-workflow
+    check_type: process
+    threshold: ">= 1 logged field/context test pre-launch"
+    severity: advise
+    rationale: >-
+      Neumeier's validate discipline uses prototypes, 1:1 interviews, and
+      field tests as realistically as possible.
+    sources: [brand-identity]
+    tension: ""
+    applies_to: [org]

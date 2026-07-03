@@ -14,7 +14,10 @@ import yaml
 
 DEFAULT_CATALOG_PATH = Path(__file__).parent / "catalog.yaml"
 
-VALID_CHECK_TYPES = ("deterministic", "vision", "process")
+# behavioral = requires runtime interaction (mid-animation retargeting, focus traps,
+# interruptibility) that neither a style snapshot nor a screenshot can observe; these
+# rules are documented and surfaced, but no engine executes them yet.
+VALID_CHECK_TYPES = ("deterministic", "vision", "process", "behavioral")
 VALID_SEVERITIES = ("block", "flag", "advise")
 VALID_CATEGORIES = (
     "typography",
@@ -48,6 +51,23 @@ class CatalogError(ValueError):
     """The catalog or waiver file violates the harness contract."""
 
 
+# Artifact scopes a rule may declare via applies_to. "any" (the default) fires on
+# every audit; everything else only fires when the run declares a matching artifact
+# type — so identity-only or dashboard-only blocks can't misfire on a page audit,
+# and org/project ceremony gates never block artifact evaluation at all.
+VALID_APPLIES_TO = (
+    "any",
+    "page",
+    "dashboard",
+    "chart",
+    "identity",
+    "print",
+    "flow",
+    "project",
+    "org",
+)
+
+
 @dataclass(frozen=True)
 class Rule:
     id: str
@@ -59,6 +79,7 @@ class Rule:
     rationale: str
     sources: tuple[str, ...] = ()
     tension: str = ""
+    applies_to: tuple[str, ...] = ("any",)
 
 
 @dataclass(frozen=True)
@@ -97,6 +118,10 @@ def _validate_rule(raw: dict, seen_ids: set[str]) -> Rule:
             f"rule {rule_id}: a 'block' rule must be mechanically arguable — give it a threshold "
             "or an enumerable criterion, or downgrade it to 'flag'"
         )
+    applies_to = tuple(raw.get("applies_to") or ("any",))
+    bad_scopes = [s for s in applies_to if s not in VALID_APPLIES_TO]
+    if bad_scopes:
+        raise CatalogError(f"rule {rule_id}: applies_to values {bad_scopes} not in {VALID_APPLIES_TO}")
     return Rule(
         id=rule_id,
         statement=str(raw["statement"]).strip(),
@@ -107,6 +132,7 @@ def _validate_rule(raw: dict, seen_ids: set[str]) -> Rule:
         rationale=str(raw["rationale"]).strip(),
         sources=tuple(raw.get("sources") or ()),
         tension=str(raw.get("tension", "") or "").strip(),
+        applies_to=applies_to,
     )
 
 
@@ -125,6 +151,14 @@ def load_catalog(path: Path = DEFAULT_CATALOG_PATH) -> list[Rule]:
     if not rules:
         raise CatalogError(f"{path}: catalog contains no rules")
     return rules
+
+
+def applicable_rules(rules: list[Rule], artifact_type: str) -> list[Rule]:
+    """Rules that fire for an artifact of the given type: scope 'any' always fires;
+    other scopes require an exact match. Audit-only page runs should pass 'page'."""
+    if artifact_type not in VALID_APPLIES_TO:
+        raise CatalogError(f"unknown artifact type {artifact_type!r}; expected one of {VALID_APPLIES_TO}")
+    return [r for r in rules if "any" in r.applies_to or artifact_type in r.applies_to]
 
 
 def load_waivers(path: Path, known_rule_ids: set[str], today: date) -> list[Waiver]:

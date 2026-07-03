@@ -26,7 +26,12 @@ from design_os.lint.engine import load_bindings, run_lint
 from design_os.lint.extract import extract_style_snapshot, write_snapshot
 from design_os.orchestrator.run import RunDeps, run_target
 from design_os.orchestrator.signals import Target
-from design_os.rules.loader import DEFAULT_CATALOG_PATH, load_catalog, load_waivers
+from design_os.rules.loader import (
+    DEFAULT_CATALOG_PATH,
+    applicable_rules,
+    load_catalog,
+    load_waivers,
+)
 
 
 def build_audit_spec(work_dir: Path) -> Path:
@@ -112,7 +117,9 @@ def build_live_deps(
     bindings = []
     catalog_path = Path(catalog_path)
     if catalog_path.exists():
-        rules = load_catalog(catalog_path)
+        # Watchlist audits evaluate rendered pages; identity/print/org/project-scoped
+        # rules (brand ceremony, grid-spec paperwork, team policy) must not fire here.
+        rules = applicable_rules(load_catalog(catalog_path), "page")
         bindings = load_bindings()
         if waivers_path is not None:
             waivers = load_waivers(

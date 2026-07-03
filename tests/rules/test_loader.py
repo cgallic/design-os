@@ -6,6 +6,7 @@ import pytest
 from design_os.rules.loader import (
     CatalogError,
     active_waiver_for,
+    applicable_rules,
     load_catalog,
     load_waivers,
 )
@@ -79,6 +80,50 @@ def test_bad_id_prefix_rejected(tmp_path):
     bad = GOOD_RULE.replace("TYPE-001", "FONT-001")
     with pytest.raises(CatalogError, match="prefix"):
         load_catalog(_write_catalog(tmp_path, bad))
+
+
+SCOPED_RULES = GOOD_RULE + """
+  - id: BRAND-001
+    statement: An onliness statement exists for the brand.
+    category: brand-identity
+    check_type: process
+    threshold: ""
+    severity: block
+    rationale: Neumeier.
+    applies_to: [identity, project]
+  - id: MOTION-006
+    statement: Animations are interruptible mid-flight.
+    category: motion
+    check_type: behavioral
+    threshold: "retarget within 1 frame"
+    severity: flag
+    rationale: Interface craft.
+"""
+
+
+def test_applies_to_scoping(tmp_path):
+    rules = load_catalog(_write_catalog(tmp_path, SCOPED_RULES))
+    page_rules = applicable_rules(rules, "page")
+    assert [r.id for r in page_rules] == ["TYPE-001", "MOTION-006"]  # default 'any' fires everywhere
+    identity_rules = applicable_rules(rules, "identity")
+    assert "BRAND-001" in [r.id for r in identity_rules]
+
+
+def test_unknown_artifact_type_rejected(tmp_path):
+    rules = load_catalog(_write_catalog(tmp_path, GOOD_RULE))
+    with pytest.raises(CatalogError, match="artifact type"):
+        applicable_rules(rules, "vibes")
+
+
+def test_bad_applies_to_value_rejected(tmp_path):
+    bad = GOOD_RULE.replace("sources: [typography-canon]", "applies_to: [everything]")
+    with pytest.raises(CatalogError, match="applies_to"):
+        load_catalog(_write_catalog(tmp_path, bad))
+
+
+def test_behavioral_check_type_accepted(tmp_path):
+    rules = load_catalog(_write_catalog(tmp_path, SCOPED_RULES))
+    assert any(r.check_type == "behavioral" for r in rules)
 
 
 def _write_waivers(tmp_path: Path, body: str) -> Path:
