@@ -13,7 +13,7 @@ from pathlib import Path
 
 from design_os.lint.engine import blocking_failures, load_bindings, run_lint
 from design_os.lint.extract import extract_style_snapshot, write_snapshot
-from design_os.rules.loader import DEFAULT_CATALOG_PATH, load_catalog, load_waivers
+from design_os.rules.loader import DEFAULT_CATALOG_PATH, applicable_rules, load_catalog, load_waivers
 
 
 def main() -> int:
@@ -23,9 +23,10 @@ def main() -> int:
     parser.add_argument("--waivers", default="waivers.yaml")
     parser.add_argument("--catalog", default=str(DEFAULT_CATALOG_PATH))
     parser.add_argument("--snapshot-out", default=None, help="Also write the extracted snapshot here")
+    parser.add_argument("--artifact-type", default="page", help="Scope filter for applies_to (page, dashboard, chart, ...)")
     args = parser.parse_args()
 
-    rules = load_catalog(Path(args.catalog))
+    rules = applicable_rules(load_catalog(Path(args.catalog)), args.artifact_type)
     bindings = load_bindings()
     waivers_path = Path(args.waivers)
     waivers = (
