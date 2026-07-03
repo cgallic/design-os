@@ -1,8 +1,26 @@
 # design-os
 
-Autonomous design-quality loop. Composes kai-taste's rubric, a render+critique
-pipeline (vendored from ux-qa-harness), and an approval-gated shipping queue
-(vendored from approval-inbox) into a scheduled pipeline.
+Autonomous design-quality loop **and design harness**. Composes kai-taste's
+rubric, a render+critique pipeline (vendored from ux-qa-harness), and an
+approval-gated shipping queue (vendored from approval-inbox) into a scheduled
+pipeline — and, on top of that, enforces a researched canon of design mastery
+as machine-checkable rules:
+
+- `design_os/canon/` — distilled philosophies/workflows of the masters (Rams,
+  Swiss school, Refactoring UI, Linear/Stripe/Vercel, Apple HIG, brand identity,
+  typography, system governance, critique practice, motion, information design)
+- `design_os/rules/catalog.yaml` — every rule with a stable ID, threshold,
+  severity (`block`/`flag`/`advise`) and check type (`deterministic`/`vision`/`process`)
+- `design_os/lint/` — deterministic rules computed over a live style snapshot
+- `design_os/critique/lenses.py` — three-lens critique panel returning per-rule
+  verdicts with evidence
+- `design_os/process/` — workflow stage gates (divergence before convergence,
+  taste contracts instead of adjectives, critique before ship)
+- `waivers.yaml` — the only sanctioned way to break a rule: scoped, justified,
+  expiring
+
+The iron rule, enforced in `orchestrator/run.py`: an unwaived `block` failure
+never auto-ships. See `AGENTS.md` for the full harness contract.
 
 Ships as a single self-contained Python package — no sibling repos to clone,
 no setup scripts to patch missing packaging metadata. `design_os/_vendor/`

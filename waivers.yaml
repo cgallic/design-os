@@ -1,0 +1,14 @@
+# Waivers: the only sanctioned way to break a catalog rule.
+#
+# A waiver is scoped (target id or glob, never "*"), justified (a real rationale,
+# >= 5 words), expiring (ISO date; expired waivers are hard errors, not warnings),
+# and attributed. See design_os/rules/loader.py for validation.
+#
+# Example:
+# waivers:
+#   - rule_id: TYPE-004
+#     scope: "kaicalls-*"
+#     rationale: Hero badge row uses 13px caps deliberately; it is decorative, not reading text.
+#     expires: 2026-10-01
+#     approved_by: connor
+waivers: []

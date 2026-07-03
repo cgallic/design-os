@@ -1,5 +1,5 @@
 """Wrap the vendored ux-qa-harness qa.py and vision.py as subprocesses; parse their output."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import json
 import os
@@ -15,6 +15,9 @@ class CritiqueResult:
     issues: list[dict]
     prioritized_fixes: list[dict]
     pillars: dict
+    # Merged harness verdicts (design_os.lint.engine.Verdict) from the lint pass and the
+    # lens panel; empty when the run predates the harness or the catalog is absent.
+    verdicts: list = field(default_factory=list)
 
 
 def parse_vision_manifest(manifest_path: Path) -> CritiqueResult:
@@ -39,6 +42,17 @@ def parse_vision_manifest(manifest_path: Path) -> CritiqueResult:
         prioritized_fixes=fixes,
         pillars=pillars,
     )
+
+
+def parse_lens_verdicts(manifest_path: Path) -> list[dict]:
+    """Collect raw per-rule verdict dicts from a lens pass's vision-manifest.json,
+    across all routes. Entries without verdicts (model error, old prompt) contribute
+    nothing rather than crashing the panel."""
+    data = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    verdicts: list[dict] = []
+    for entry in data.get("results", []):
+        verdicts.extend(entry.get("verdicts") or [])
+    return verdicts
 
 
 def run_qa(env_file: Path, run_root: Path, base_url: str | None = None, spec: Path | None = None) -> Path:

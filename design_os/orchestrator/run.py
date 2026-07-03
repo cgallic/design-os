@@ -54,12 +54,26 @@ def run_target(target: Target, deps: RunDeps, max_iterations: int = 3) -> dict:
             break  # nothing left we can fix automatically; stop early rather than burn iterations
 
     gate = deps.gate_for(target)
+    # Harness iron rule: an unwaived 'block' verdict never auto-ships. Force the item
+    # onto the human-held path regardless of how safe the surface is or how high the
+    # composite score landed.
+    blockers = [
+        v for v in getattr(critique, "verdicts", []) if v.status == "fail" and v.severity == "block"
+    ]
+    if blockers:
+        gate = "irreversible"
     below_threshold = critique.composite_score < deps.pass_threshold
     iteration_capped = iterations >= max_iterations and below_threshold
     preview = f"Would ship design review for {target.id} (score {critique.composite_score}/30)."
     item = build_approval_item(
         target.id, critique, gate=gate, dry_run_preview=preview, run_date=deps.run_date
     )
+    if blockers:
+        item["summary"] += (
+            f" HELD: {len(blockers)} unwaived blocking rule failure(s): "
+            + ", ".join(v.rule_id for v in blockers[:6])
+            + "."
+        )
     if below_threshold:
         item["risk_tier"] = "medium"
         if iteration_capped:
@@ -95,6 +109,11 @@ def main() -> None:
         default=str(Path.home() / ".design-os"),
         help="Where run scratch files, the approval-inbox store, and the dashboard db live.",
     )
+    parser.add_argument(
+        "--waivers",
+        default="waivers.yaml",
+        help="Waiver file granting scoped, expiring exemptions from catalog rules (see design_os/rules/loader.py).",
+    )
     args = parser.parse_args()
 
     targets = load_watchlist(args.watchlist)
@@ -123,7 +142,13 @@ def main() -> None:
     if not dashboard_db_path.exists():
         init_db(dashboard_db_path)
 
-    deps = build_live_deps(work_root=work_root, store=store, run_date=run_date)
+    waivers_path = Path(args.waivers)
+    deps = build_live_deps(
+        work_root=work_root,
+        store=store,
+        run_date=run_date,
+        waivers_path=waivers_path if waivers_path.exists() else None,
+    )
     run_watchlist_live(due, deps=deps, dashboard_db_path=dashboard_db_path)
 
 

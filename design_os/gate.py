@@ -18,6 +18,31 @@ def build_approval_item(
         {"label": "composite_score", "value": str(critique.composite_score)},
         {"label": "open_p0_fixes", "value": str(sum(1 for f in critique.prioritized_fixes if f["priority"] == "P0"))},
     ]
+    verdicts = getattr(critique, "verdicts", []) or []
+    if verdicts:
+        counts: dict[str, int] = {}
+        for v in verdicts:
+            counts[v.status] = counts.get(v.status, 0) + 1
+        evidence.append(
+            {
+                "label": "harness_verdicts",
+                "value": f"{len(verdicts)} rules checked: "
+                + ", ".join(f"{status}={n}" for status, n in sorted(counts.items())),
+            }
+        )
+        blockers = [v for v in verdicts if v.status == "fail" and v.severity == "block"]
+        if blockers:
+            evidence.append(
+                {
+                    "label": "blocking_failures",
+                    "value": "; ".join(f"{v.rule_id}: {v.evidence}"[:160] for v in blockers[:8]),
+                }
+            )
+        waived = [v for v in verdicts if v.status == "waived"]
+        if waived:
+            evidence.append(
+                {"label": "waived_rules", "value": "; ".join(f"{v.rule_id}: {v.evidence}"[:160] for v in waived[:8])}
+            )
     return {
         "type": "task",
         "channel": "design",

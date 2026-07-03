@@ -112,6 +112,10 @@ def critique(route: str, png: Path, prompt_template: str) -> dict:
               "working_well": parsed.get("working_well", []) or []}
     if "scorecard" in parsed:
         result["scorecard"] = parsed["scorecard"]
+    if "verdicts" in parsed:
+        # design-os-local extension: lens prompts return per-rule verdicts
+        # (see design_os/critique/lenses.py); preserve them in the manifest.
+        result["verdicts"] = parsed["verdicts"]
     return result
 
 
