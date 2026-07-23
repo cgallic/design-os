@@ -44,3 +44,8 @@ design-os --watchlist watchlist.yaml --dry-run
 ```
 
 The live (non-dry-run) path is not yet implemented — see `deploy/README.md`.
+
+
+---
+
+*Built and maintained by [Connor Gallic](https://pr.linkedin.com/in/cgallic) — connect on LinkedIn.*
